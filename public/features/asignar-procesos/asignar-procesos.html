@@ -1,0 +1,145 @@
+<div class="caja">
+  <h4>Asignación Procesos a Menú</h4>
+
+  <div class="paneles">
+    <!-- PANEL IZQUIERDO: MENÚS -->
+    <div class="panel panel-izquierdo">
+      <h5 class="subtitulo-panel">Lista de Menús</h5>
+
+      <form class="bar d-flex align-items-center flex-wrap gap-2" (submit)="$event.preventDefault()">
+        <div class="search-box d-flex align-items-center gap-2">
+          <label class="me-1 mb-0" style="font-size: 0.85rem;">Filtro:</label>
+          <input type="text" class="form-control form-control-sm" style="width: 140px;" name="filtroMenu"
+            [(ngModel)]="filtroMenu" (ngModelChange)="paginaMenuActual = 1" placeholder="Buscar menú..." />
+        </div>
+      </form>
+
+      <table class="table">
+        <thead>
+          <tr>
+            <th style="width: 30px;"></th>
+            <th style="width: 30px;">#</th>
+            <th>LISTA DE MENÚS</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (menu of menusPaginados; track menu.codm; let i = $index) {
+          <tr [class.fila-seleccionada]="menuSeleccionado?.codm === menu.codm">
+            <td style="text-align: center;">
+              <input class="form-check-input" type="radio" name="menuRadio"
+                [checked]="menuSeleccionado?.codm === menu.codm" (change)="seleccionarMenu(menu)">
+            </td>
+            <td>{{ (paginaMenuActual - 1) * itemsPorPaginaMenu + i + 1 }}</td>
+            <td>{{ menu.nombre }}</td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="3" class="text-center">No hay menús</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+
+      <nav aria-label="Paginación de menús">
+        <ul class="pagination justify-content-center">
+          <li class="page-item" [class.disabled]="paginaMenuActual === 1">
+            <a class="page-link" href="javascript:void(0)" (click)="paginaAnteriorMenu()">
+              << </a>
+          </li>
+          @for (p of paginasMenu; track p) {
+          <li class="page-item" [class.active]="p === paginaMenuActual">
+            <a class="page-link" href="javascript:void(0)" (click)="irPaginaMenu(p)">{{ p }}</a>
+          </li>
+          }
+          <li class="page-item" [class.disabled]="paginaMenuActual === totalPaginasMenu">
+            <a class="page-link" href="javascript:void(0)" (click)="paginaSiguienteMenu()"> >> </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+
+    <!-- PANEL DERECHO: PROCESOS -->
+    <div class="panel panel-derecho">
+      <h5 class="subtitulo-panel">Lista de Procesos</h5>
+
+      <form class="bar d-flex align-items-center flex-wrap gap-2" (submit)="$event.preventDefault()">
+        <div class="search-box d-flex align-items-center gap-2 w-100 justify-content-between">
+          <div class="d-flex align-items-center gap-1">
+            <label class="me-1 mb-0" style="font-size: 0.85rem;">Filtro:</label>
+            <input type="text" class="form-control form-control-sm" style="width: 120px;" name="filtroProceso"
+              [(ngModel)]="filtroProceso" (ngModelChange)="aplicarFiltrosProcesos()" placeholder="Buscar..." />
+          </div>
+
+          <div class="form-check mb-0">
+            <input class="form-check-input" type="radio" name="filtroAsig" id="fTodos" value="todos"
+              [ngModel]="filtroAsignacion" (ngModelChange)="filtroAsignacion = $event; aplicarFiltrosProcesos()">
+            <label class="form-check-label ms-1" for="fTodos">Todos</label>
+          </div>
+          <div class="form-check mb-0">
+            <input class="form-check-input" type="radio" name="filtroAsig" id="fAsignados" value="asignados"
+              [ngModel]="filtroAsignacion" (ngModelChange)="filtroAsignacion = $event; aplicarFiltrosProcesos()">
+            <label class="form-check-label ms-1" for="fAsignados">Sí asig.</label>
+          </div>
+          <div class="form-check mb-0">
+            <input class="form-check-input" type="radio" name="filtroAsig" id="fNoAsignados" value="noAsignados"
+              [ngModel]="filtroAsignacion" (ngModelChange)="filtroAsignacion = $event; aplicarFiltrosProcesos()">
+            <label class="form-check-label ms-1" for="fNoAsignados">No asig.</label>
+          </div>
+        </div>
+      </form>
+
+      <table class="table">
+        <thead>
+          <tr>
+            <th style="width: 30px;"></th>
+            <th style="width: 30px;">#</th>
+            <th>LISTA DE PROCESOS</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (proceso of procesosPaginados; track proceso.codp; let i = $index) {
+          <tr [class.fila-seleccionada]="procesosSeleccionados.has(proceso.codp!)">
+            <td style="text-align: center;">
+              <input class="form-check-input" type="checkbox" [checked]="procesosSeleccionados.has(proceso.codp!)"
+                (change)="toggleProceso(proceso)" [disabled]="!menuSeleccionado">
+            </td>
+            <td>{{ (paginaProcesoActual - 1) * itemsPorPaginaProceso + i + 1 }}</td>
+            <td>{{ proceso.nombre }}</td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="3" class="text-center">No hay procesos</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+
+      <nav aria-label="Paginación de procesos">
+        <ul class="pagination justify-content-center">
+          <li class="page-item" [class.disabled]="paginaProcesoActual === 1">
+            <a class="page-link" href="javascript:void(0)" (click)="paginaAnteriorProceso()">
+              << </a>
+          </li>
+          @for (p of paginasProceso; track p) {
+          <li class="page-item" [class.active]="p === paginaProcesoActual">
+            <a class="page-link" href="javascript:void(0)" (click)="irPaginaProceso(p)">{{ p }}</a>
+          </li>
+          }
+          <li class="page-item" [class.disabled]="paginaProcesoActual === totalPaginasProceso">
+            <a class="page-link" href="javascript:void(0)" (click)="paginaSiguienteProceso()"> >> </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+
+  <div class="acciones mt-3 text-center">
+    <button class="btn btn-primary" (click)="guardarAsignacion()" [disabled]="!menuSeleccionado">
+      Guardar Asignación
+    </button>
+  </div>
+</div>
+<div class="mi-toast" [class.visible]="toastVisible" [class.error]="toastTipo === 'error'">
+  <span class="mi-toast-icon">{{ toastTipo === 'error' ? '✕' : '✓' }}</span>
+  <span class="mi-toast-msg">{{ toastMensaje }}</span>
+</div>

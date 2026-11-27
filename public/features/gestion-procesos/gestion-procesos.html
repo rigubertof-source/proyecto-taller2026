@@ -1,0 +1,187 @@
+<button class="bot" type="button" data-bs-toggle="modal" data-bs-target="#agregarProcesoModal"
+        (click)="limpiarAgregar()">
+  <img class="img1" src="add1.png" alt=""> <br>Nuevo Proceso
+</button>
+
+<div class="caja">
+  <h4>Gestión de Procesos</h4>
+
+  <form class="bar d-flex align-items-center flex-wrap gap-4" (submit)="$event.preventDefault()">
+    <div class="search-box d-flex align-items-center flex-wrap gap-4">
+      <div class="d-flex align-items-center">
+        <label class="me-2 mb-0">Filtro:</label>
+        <input id="buscarProceso" type="text" class="form-control form-control-sm" style="width: 180px;"
+               placeholder="Buscar por nombre" [formControl]="buscarControl"
+               (input)="onBuscarInput($event)" />
+      </div>
+      <div class="d-flex align-items-center gap-4">
+        <div class="form-check mb-0">
+          <input type="radio" class="form-check-input" name="estadoProceso" id="procesosActivos" (change)="listarPorEstado(1)">
+          <label class="form-check-label ms-1" for="procesosActivos">Activos</label>
+        </div>
+        <div class="form-check mb-0">
+          <input type="radio" class="form-check-input" name="estadoProceso" id="procesosBajas" (change)="listarPorEstado(0)">
+          <label class="form-check-label ms-1" for="procesosBajas">Bajas</label>
+        </div>
+        <div class="form-check mb-0">
+          <input type="radio" class="form-check-input" name="estadoProceso" id="todosProcesos" checked (change)="mostrar()">
+          <label class="form-check-label ms-1" for="todosProcesos">Todos</label>
+        </div>
+      </div>
+    </div>
+  </form>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th scope="col">Nombre del Proceso</th>
+        <th scope="col">Enlace</th>
+        <th scope="col">Estado</th>
+        <th scope="col">M</th>
+        <th scope="col">B</th>
+        <th scope="col">H</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (proceso of listaPaginada; track proceso.codp) {
+      <tr>
+        <td>{{ proceso.nombre }}</td>
+        <td>{{ proceso.enlace }}</td>
+        <td>
+          @if (proceso.estado === 1) {
+          <img src="si.png" alt="Activo" style="width: 50px;">
+          } @else {
+          <img src="no.png" alt="Baja" style="width: 50px;">
+          }
+        </td>
+        <td><img class="fo12" src="mod.png" (click)="cargarProceso(proceso.codp!)" title="modificar"></td>
+        <td>
+          <img class="fo13" src="eliminar.png" alt="Eliminar" style="cursor: pointer;"
+               [style.opacity]="proceso.estado === 0 ? 0.9 : 1"
+               (click)="prepararCambioEstado(proceso, 0)" title="Dar de baja">
+        </td>
+        <td>
+          <img class="fo14" src="hab.png" alt="Habilitar" style="cursor: pointer;"
+               [style.opacity]="proceso.estado === 1 ? 0.9 : 1"
+               (click)="prepararCambioEstado(proceso, 1)" title="Habilitar">
+        </td>
+      </tr>
+      } @empty {
+      <tr><td colspan="6" class="text-center">No se encontraron procesos.</td></tr>
+      }
+    </tbody>
+  </table>
+
+  <!-- Paginador -->
+  <nav aria-label="Paginación de procesos">
+    <ul class="pagination justify-content-center">
+      <li class="page-item" [class.disabled]="paginaActual === 1">
+        <a class="page-link" href="javascript:void(0)" (click)="paginaAnterior()"> << </a>
+      </li>
+      @for (p of paginas; track p) {
+      <li class="page-item" [class.active]="p === paginaActual">
+        <a class="page-link" href="javascript:void(0)" (click)="irPagina(p)">{{ p }}</a>
+      </li>
+      }
+      <li class="page-item" [class.disabled]="paginaActual === totalPaginas">
+        <a class="page-link" href="javascript:void(0)" (click)="paginaSiguiente()"> >> </a>
+      </li>
+    </ul>
+  </nav>
+</div>
+
+<!-- Modal Agregar Proceso -->
+<div class="modal fade" #addModal id="agregarProcesoModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content modal-persona-content">
+      <div class="modal-header modal-persona-header">
+        <h5 class="modal-title">Adicionar Nuevo Proceso</h5>
+      </div>
+      <form [formGroup]="regFormAgregar" (ngSubmit)="guardarProceso()">
+        <div class="modal-persona-body">
+          <div class="row-persona">
+            <label class="label-persona" for="nombreNuevo">Nombre:</label>
+            <input id="nombreNuevo" class="input-persona" type="text" formControlName="nombre" maxlength="100">
+          </div>
+          @if (regFormAgregar.get('nombre')?.touched && regFormAgregar.get('nombre')?.invalid) {
+          <div class="text-danger small mb-2">El nombre es obligatorio.</div>
+          }
+          <div class="row-persona">
+            <label class="label-persona" for="enlaceNuevo">Enlace:</label>
+            <input id="enlaceNuevo" class="input-persona" type="text" formControlName="enlace" maxlength="200">
+          </div>
+        </div>
+        <div class="modal-footer modal-persona-footer">
+          <button type="submit" class="btn btn-primary px-4">Guardar</button>
+          <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Modificar Proceso -->
+<div class="modal fade" #modModal id="modificarProcesoModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content modal-persona-content">
+      <div class="modal-header modal-persona-header">
+        <h5 class="modal-title">Modificar Proceso</h5>
+      </div>
+      <form [formGroup]="regFormModificar" (ngSubmit)="guardarModificacion()">
+        <div class="modal-persona-body">
+          <div class="row-persona">
+            <label class="label-persona" for="nombreModificar">Nombre:</label>
+            <input id="nombreModificar" class="input-persona" type="text" formControlName="nombre" maxlength="100">
+          </div>
+          @if (regFormModificar.get('nombre')?.touched && regFormModificar.get('nombre')?.invalid) {
+          <div class="text-danger small mb-2">El nombre es obligatorio.</div>
+          }
+          <div class="row-persona">
+            <label class="label-persona" for="enlaceModificar">Enlace:</label>
+            <input id="enlaceModificar" class="input-persona" type="text" formControlName="enlace" maxlength="200">
+          </div>
+        </div>
+        <div class="modal-footer modal-persona-footer">
+          <button type="submit" class="btn btn-primary px-4">Modificar</button>
+          <button type="button" class="btn btn-secondary px-4" (click)="cerrarModal(modModal)">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Confirmación -->
+<div class="modal fade" #confModal id="confirmarProcesoModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header py-2"></div>
+      <div class="modal-body text-center">
+        @switch (accionPendiente) {
+        @case ('agregar') {
+        <p>¿Seguro de <strong>agregar</strong> el proceso <strong>{{ regFormAgregar.get('nombre')?.value }}</strong>?</p>
+        }
+        @case ('modificar') {
+        <p>¿Seguro de <strong>modificar</strong> el proceso <strong>{{ regFormModificar.get('nombre')?.value }}</strong>?</p>
+        }
+        @case ('estado') {
+        @if (estadoPendiente === 0) {
+        <p>¿Seguro de dar de baja el proceso <strong>{{ procesoPendiente?.nombre }}</strong>?</p>
+        } @else if (estadoPendiente === 1) {
+        <p>¿Seguro de habilitar el proceso <strong>{{ procesoPendiente?.nombre }}</strong>?</p>
+        }
+        }
+        }
+      </div>
+      <div class="modal-footer justify-content-center gap-2 py-2">
+        <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal" (click)="cancelarCambioEstado()">Cancelar</button>
+        <button type="button" class="btn btn-primary btn-sm px-3" data-bs-dismiss="modal" (click)="confirmarAccion()">Aceptar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="mi-toast" [class.visible]="toastVisible" [class.error]="toastTipo === 'error'">
+  <span class="mi-toast-icon">{{ toastTipo === 'error' ? '✕' : '✓' }}</span>
+  <span class="mi-toast-msg">{{ toastMensaje }}</span>
+</div>

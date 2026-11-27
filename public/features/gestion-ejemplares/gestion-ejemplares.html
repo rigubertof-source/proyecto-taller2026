@@ -1,0 +1,300 @@
+<div class="caja">
+    <h4>Gestión de Ejemplares</h4>
+
+    <form class="bar d-flex align-items-center flex-nowrap gap-4" (submit)="$event.preventDefault()">
+        <div class="d-flex align-items-center">
+            <label class="me-2 mb-0 text-nowrap">Filtro:</label>
+            <input type="text" class="form-control form-control-sm" style="width: 160px;"
+                placeholder="Título o Autor (Enter)" [formControl]="buscarControl" (keyup.enter)="onBuscarEnter()" />
+        </div>
+        <div class="d-flex align-items-center">
+            <label class="me-2 mb-0 text-nowrap">Editorial:</label>
+            <select class="form-select form-select-sm" style="width: 140px" [formControl]="editorialControl"
+                (change)="cargarTextos()">
+                <option [ngValue]="null">Editoriales...</option>
+                @for (e of listaEditoriales; track e.code) { <option [ngValue]="e.code">{{ e.nombre }}</option> }
+            </select>
+        </div>
+        <div class="d-flex align-items-center">
+            <label class="me-2 mb-0 text-nowrap">Áreas:</label>
+            <select class="form-select form-select-sm" style="width: 120px" [formControl]="areaControl"
+                (change)="cargarTextos()">
+                <option [ngValue]="null">Áreas...</option>
+                @for (a of listaAreas; track a.coda) { <option [ngValue]="a.coda">{{ a.nombre }}</option> }
+            </select>
+        </div>
+        <div class="d-flex align-items-center">
+            <label class="me-2 mb-0 text-nowrap">Tipos:</label>
+            <select class="form-select form-select-sm" style="width: 120px" [formControl]="tipoControl"
+                (change)="cargarTextos()">
+                <option [ngValue]="null">Tipos...</option>
+                @for (t of listaTipos; track t.codtipo) { <option [ngValue]="t.codtipo">{{ t.nombre }}</option> }
+            </select>
+        </div>
+        <div class="d-flex align-items-center gap-3 ms-2">
+            <div class="form-check mb-0 d-flex align-items-center gap-1">
+                <input type="radio" class="form-check-input mt-0" name="estadoTexto" id="textosActivos"
+                    [checked]="estadoTexto === 'activos'" (change)="cambiarEstadoTexto('activos')">
+                <label class="form-check-label text-nowrap" for="textosActivos">Activos</label>
+            </div>
+            <div class="form-check mb-0 d-flex align-items-center gap-1">
+                <input type="radio" class="form-check-input mt-0" name="estadoTexto" id="textosBajas"
+                    [checked]="estadoTexto === 'bajas'" (change)="cambiarEstadoTexto('bajas')">
+                <label class="form-check-label text-nowrap" for="textosBajas">Bajas</label>
+            </div>
+            <div class="form-check mb-0 d-flex align-items-center gap-1">
+                <input type="radio" class="form-check-input mt-0" name="estadoTexto" id="textosTodos"
+                    [checked]="estadoTexto === 'todos'" (change)="cambiarEstadoTexto('todos')">
+                <label class="form-check-label text-nowrap" for="textosTodos">Todos</label>
+            </div>
+        </div>
+    </form>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th style="width: 40px;">#</th>
+                <th>Título</th>
+                <th>Área</th>
+                <th>Editorial</th>
+                <th>Tipos</th>
+                <th class="text-center">Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (texto of textosPaginados; track texto.codt) {
+            <tr [class.fila-seleccionada]="textoSeleccionado?.codt === texto.codt">
+                <td class="text-center">
+                    <input class="form-check-input" type="radio" name="textoRadio"
+                        [checked]="textoSeleccionado?.codt === texto.codt" (change)="seleccionarTexto(texto)">
+                </td>
+                <td>{{ texto.titulo }}</td>
+                <td>{{ texto.area?.nombre }}</td>
+                <td>{{ texto.editorial?.nombre }}</td>
+                <td>
+                    @for (t of texto.tipos; track t.codtipo; let last = $last) {
+                    {{ t.nombre }}@if (!last) {, }
+                    } @empty { <span class="text-muted">-</span> }
+                </td>
+                <td class="text-center">
+                    <span class="icono-estado" [title]="esActivo(texto) ? 'Activo' : 'Baja'">
+                        @if (esActivo(texto)) {
+                        <img class="f15" src="si.png" >
+                        } @else {
+                        <img class="f15" src="no.png" >
+                        }
+                    </span>
+                </td>
+            </tr>
+
+            } @empty {
+            <tr>
+                <td colspan="5" class="text-center">No se encontraron textos.</td>
+            </tr>
+            }
+
+        </tbody>
+    </table>
+
+    <nav aria-label="Paginación de textos">
+        <ul class="pagination justify-content-center">
+            <li class="page-item" [class.disabled]="paginaTexto === 1">
+                <a class="page-link" href="javascript:void(0)" (click)="irPaginaTexto(paginaTexto - 1)"> &lt;&lt; </a>
+            </li>
+            @for (p of paginasTexto; track p) {
+            <li class="page-item" [class.active]="p === paginaTexto">
+                <a class="page-link" href="javascript:void(0)" (click)="irPaginaTexto(p)">{{ p }}</a>
+            </li>
+            }
+            <li class="page-item" [class.disabled]="paginaTexto === totalPaginasTexto">
+                <a class="page-link" href="javascript:void(0)" (click)="irPaginaTexto(paginaTexto + 1)"> &gt;&gt; </a>
+            </li>
+        </ul>
+    </nav>
+
+    <h6 class="detalle-titulo">.:: D E T A L L E &nbsp; D E &nbsp; E J E M P L A R E S ::.</h6>
+
+    @if (textoSeleccionado) {
+    <p class="text-center text-muted mb-2">{{ textoSeleccionado.titulo }}</p>
+    }
+
+    <div class="detalle-barra">
+        <div class="d-flex align-items-center gap-3">
+            <div class="form-check mb-0 d-flex align-items-center gap-1">
+                <input type="radio" class="form-check-input mt-0" name="estadoEj" id="ejActivos"
+                    [checked]="filtroEstado === 'activos'" (change)="cambiarFiltroEstado('activos')">
+                <label class="form-check-label" for="ejActivos">Activos</label>
+            </div>
+            <div class="form-check mb-0 d-flex align-items-center gap-1">
+                <input type="radio" class="form-check-input mt-0" name="estadoEj" id="ejBajas"
+                    [checked]="filtroEstado === 'bajas'" (change)="cambiarFiltroEstado('bajas')">
+                <label class="form-check-label" for="ejBajas">Bajas</label>
+            </div>
+        </div>
+
+        <button type="button" class="btn-icono" title="Agregar ejemplar" [disabled]="!textoSeleccionado"
+            (click)="abrirAgregar()">
+            <img src="add1.png" alt="Agregar" style="width: 32px;">
+        </button>
+    </div>
+
+    <table class="table tabla-detalle">
+        <thead>
+            <tr>
+                <th>CodInv.</th>
+                <th>Disponible</th>
+                <th class="text-center">Estado</th>
+                <th class="text-center">M</th>
+                <th class="text-center">B</th>
+                <th class="text-center">H</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (ej of ejemplaresPaginados; track ej.codinv) {
+            <tr>
+                <td>{{ ej.codinv }}</td>
+                <td>{{ ej.disponible === 1 ? 'Sí' : 'No (prestado)' }}</td>
+                <td class="text-center">
+                    <span class="icono-estado" [title]="ej.estado === 1 ? 'Activo' : 'Dado de baja'">
+                        @if (ej.estado === 1) {
+                        <img src="si.png" alt="Activa">
+                        } @else {
+                        <img src="no.png" alt="Activa">
+                        }
+                    </span>
+                </td>
+                <td class="text-center">
+
+                    <img class="fo12" src="mod.png" title="Modificar" (click)="abrirModificar(ej)">
+
+                </td>
+                <td class="text-center">
+                    <img class="fo13" src="eliminar.png" title="Dar de baja" (click)="pedirConfirmacion('baja', ej)">
+
+                </td>
+                <td class="text-center">
+                    @if (ej.estado === 0) {
+                    <button type="button" class="btn-icono" title="Habilitar" (click)="pedirConfirmacion('alta', ej)">
+                        <img class="fo14" src="hab.png" alt="Habilitar" style="opacity: 0.8;"></button>
+                    }@else {
+                    <button type="button" class="btn-icono" title="Habilitar"><img class="fo14" src="hab.png"
+                            alt="Habilitar"></button>
+
+                    }
+                </td>
+            </tr>
+            } @empty {
+            <tr>
+                <td colspan="6" class="text-center">
+                    {{ textoSeleccionado ? 'No hay ejemplares.' : 'Seleccione un texto.' }}
+                </td>
+            </tr>
+            }
+        </tbody>
+    </table>
+
+    <nav aria-label="Paginación de ejemplares">
+        <ul class="pagination justify-content-center">
+            <li class="page-item" [class.disabled]="paginaEj === 1">
+                <a class="page-link" href="javascript:void(0)" (click)="irPaginaEj(paginaEj - 1)"> &lt;&lt; </a>
+            </li>
+            @for (p of paginasEj; track p) {
+            <li class="page-item" [class.active]="p === paginaEj">
+                <a class="page-link" href="javascript:void(0)" (click)="irPaginaEj(p)">{{ p }}</a>
+            </li>
+            }
+            <li class="page-item" [class.disabled]="paginaEj === totalPaginasEj">
+                <a class="page-link" href="javascript:void(0)" (click)="irPaginaEj(paginaEj + 1)"> &gt;&gt; </a>
+            </li>
+        </ul>
+    </nav>
+</div>
+
+<!-- MODAL ADICIONAR EJEMPLAR -->
+<div class="modal fade" #addModal tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modal-persona-content">
+            <div class="modal-header modal-persona-header">
+                <h5 class="modal-title">Adicionar Nuevo Ejemplar ..</h5>
+            </div>
+            <form (submit)="$event.preventDefault(); guardarAgregar()">
+                <div class="modal-persona-body">
+                    <div class="row-persona">
+                        <label class="label-persona">Nro. Inventario:</label>
+                        <input class="input-persona" type="number" min="1" [formControl]="nroInvControl">
+                    </div>
+                    @if (nroInvControl.touched && nroInvControl.invalid) {
+                    <small class="text-danger d-block text-center">Ingrese un Nro. de inventario válido.</small>
+                    }
+                </div>
+                <div class="modal-footer modal-persona-footer">
+                    <button type="submit" class="btn btn-primary px-4">Guardar</button>
+                    <button type="button" class="btn btn-secondary px-4"
+                        (click)="cerrarModal(addModal)">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" #modModal tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modal-persona-content">
+            <div class="modal-header modal-persona-header">
+                <h5 class="modal-title">Modificar Datos del Ejemplar ..</h5>
+            </div>
+            <form (submit)="$event.preventDefault(); guardarModificar()">
+                <div class="modal-persona-body">
+                    <div class="row-persona">
+                        <label class="label-persona">Dato Anterior:</label>
+                        <input class="input-persona dato-anterior" type="text" disabled
+                            [value]="ejemplarEditando?.codinv ?? ''">
+                    </div>
+                    <div class="row-persona">
+                        <label class="label-persona">Nro. Inventario Nuevo:</label>
+                        <input class="input-persona" type="number" min="1" [formControl]="nroInvControl">
+                    </div>
+                    @if (nroInvControl.touched && nroInvControl.invalid) {
+                    <small class="text-danger d-block text-center">Ingrese un Nro. de inventario válido.</small>
+                    }
+                </div>
+                <div class="modal-footer modal-persona-footer">
+                    <button type="submit" class="btn btn-primary px-4">Modificar</button>
+                    <button type="button" class="btn btn-secondary px-4"
+                        (click)="cerrarModal(modModal)">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" #confModal tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header py-2"></div>
+            <div class="modal-body text-center">
+                @switch (accionPendiente) {
+                @case ('agregar') { <p>¿Seguro de <strong>agregar</strong> el ejemplar <strong>{{ nroInvControl.value
+                        }}</strong> a <strong>{{ textoSeleccionado?.titulo }}</strong>?</p> }
+                @case ('modificar') { <p>¿Seguro de <strong>modificar</strong> el Nro. de inventario <strong>{{
+                        ejemplarEditando?.codinv }}</strong> por <strong>{{ nroInvControl.value }}</strong>?</p> }
+                @case ('baja') { <p>¿Seguro de dar de <strong>baja</strong> el ejemplar <strong>{{
+                        ejemplarPendiente?.codinv }}</strong>?</p> }
+                @case ('alta') { <p>¿Seguro de <strong>habilitar</strong> el ejemplar <strong>{{
+                        ejemplarPendiente?.codinv }}</strong>?</p> }
+                }
+            </div>
+            <div class="modal-footer justify-content-center gap-2 py-2">
+                <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal"
+                    (click)="cancelarAccion()">Cancelar</button>
+                <button type="button" class="btn btn-primary btn-sm px-3" (click)="confirmarAccion()">Aceptar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div class="mi-toast" [class.visible]="toastVisible" [class.error]="toastTipo === 'error'">
+    <span class="mi-toast-icon">{{ toastTipo === 'error' ? '✕' : '✓' }}</span>
+    <span class="mi-toast-msg">{{ toastMensaje }}</span>
+</div>

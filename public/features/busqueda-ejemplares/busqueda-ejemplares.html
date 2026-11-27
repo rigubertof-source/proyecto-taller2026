@@ -1,0 +1,141 @@
+@if (!textoVer) {
+
+<h5 class="titulo-pantalla">Gestión Búsquedas de Ejemplares Digitales</h5>
+
+<fieldset class="caja-grupo caja-busqueda">
+    <legend>Buscar Ejemplares por :</legend>
+
+    <label class="etiqueta" for="busTitulo">Título:</label>
+    <input id="busTitulo" type="text" class="form-control form-control-sm"
+        [formControl]="tituloControl" (input)="filtrar()">
+
+    <label class="etiqueta" for="busAutor">Autor:</label>
+    <input id="busAutor" type="text" class="form-control form-control-sm"
+        [formControl]="autorControl" (input)="filtrar()">
+
+    <label class="etiqueta" for="busArea">Áreas:</label>
+    <select id="busArea" class="form-select form-select-sm"
+        [formControl]="areaControl" (change)="filtrar()">
+        <option [ngValue]="null">Seleccionar una Área ..</option>
+        @for (a of listaAreas; track a.coda) {
+        <option [ngValue]="a.coda">{{ a.nombre }}</option>
+        }
+    </select>
+
+    <label class="etiqueta" for="busEditorial">Editoriales:</label>
+    <select id="busEditorial" class="form-select form-select-sm"
+        [formControl]="editorialControl" (change)="filtrar()">
+        <option [ngValue]="null">Seleccionar una Editorial ..</option>
+        @for (e of listaEditoriales; track e.code) {
+        <option [ngValue]="e.code">{{ e.nombre }}</option>
+        }
+    </select>
+
+    <label class="etiqueta" for="busTipo">Tipos:</label>
+    <select id="busTipo" class="form-select form-select-sm"
+        [formControl]="tipoControl" (change)="filtrar()">
+        <option [ngValue]="null">Seleccionar un Tipo ..</option>
+        @for (t of listaTipos; track t.codtipo) {
+        <option [ngValue]="t.codtipo">{{ t.nombre }}</option>
+        }
+    </select>
+
+    <div class="text-end mt-2">
+        <button type="button" class="btn btn-secondary btn-sm px-3" (click)="limpiar()">Limpiar</button>
+    </div>
+</fieldset>
+
+<fieldset class="caja-grupo">
+    <legend>Resultados de Búsqueda:</legend>
+
+    @if (!hayFiltros) {
+    <p class="text-center text-muted my-4">
+        Use los filtros de arriba para buscar ejemplares.
+    </p>
+    } @else {
+
+    <p class="cantidad">
+        Se encontraron <strong>{{ listaResultados.length }}</strong>
+        {{ listaResultados.length === 1 ? 'ejemplar' : 'ejemplares' }}
+    </p>
+
+    <table class="table tabla-resultados">
+        <thead>
+            <tr>
+                <th scope="col" class="col-num">#</th>
+                <th scope="col">EJEMPLARES ENCONTRADOS</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (texto of listaPaginada; track texto.codt; let i = $index) {
+            <tr>
+                <td class="col-num">{{ (paginaActual - 1) * itemsPorPagina + i + 1 }}</td>
+                <td>
+                    <a href="javascript:void(0)" class="enlace-ejemplar" (click)="verEjemplar(texto)">
+                        {{ texto.titulo }}
+                    </a>
+                    <div class="detalle-ejemplar">
+                        {{ autoresTexto(texto) }}, {{ texto.editorial?.nombre }},
+                        {{ texto.fechapub || 's/f' }}, {{ texto.area?.nombre }}, {{ tiposTexto(texto) }}
+                    </div>
+                </td>
+            </tr>
+            } @empty {
+            <tr>
+                <td colspan="2" class="text-center">No se encontraron ejemplares.</td>
+            </tr>
+            }
+        </tbody>
+    </table>
+
+    <!-- Paginador -->
+    <nav aria-label="Paginación de ejemplares">
+        <ul class="pagination pagination-sm justify-content-center mb-0">
+            <li class="page-item" [class.disabled]="paginaActual === 1">
+                <a class="page-link" href="javascript:void(0)" (click)="paginaAnterior()">&laquo;</a>
+            </li>
+            @for (p of paginas; track p) {
+            <li class="page-item" [class.active]="p === paginaActual">
+                <a class="page-link" href="javascript:void(0)" (click)="irPagina(p)">{{ p }}</a>
+            </li>
+            }
+            <li class="page-item" [class.disabled]="paginaActual === totalPaginas || totalPaginas === 0">
+                <a class="page-link" href="javascript:void(0)" (click)="paginaSiguiente()">&raquo;</a>
+            </li>
+        </ul>
+    </nav>
+
+    }
+</fieldset>
+
+} @else {
+
+<h5 class="titulo-pantalla">Visualizar un Ejemplar</h5>
+
+<fieldset class="caja-grupo">
+    <legend>Vista Ejemplar:</legend>
+
+    <div class="cabecera-ejemplar">
+        <strong>{{ textoVer.titulo }}</strong>
+        <div class="detalle-ejemplar">
+            {{ autoresTexto(textoVer) }}, {{ textoVer.editorial?.nombre }},
+            {{ textoVer.fechapub || 's/f' }}, {{ textoVer.area?.nombre }}, {{ tiposTexto(textoVer) }}
+        </div>
+    </div>
+
+    @if (cargandoPdf) {
+    <p class="text-center text-muted my-5">Cargando ejemplar...</p>
+    } @else if (pdfUrl) {
+    <iframe class="visor" [src]="pdfUrl" title="Vista del ejemplar seleccionado"></iframe>
+    } @else {
+    <p class="text-center text-muted my-5">{{ errorPdf }}</p>
+    }
+</fieldset>
+
+<div class="text-center">
+    <button type="button" class="btn btn-secondary btn-sm px-4" (click)="volver()">
+        Volver a la búsqueda
+    </button>
+</div>
+
+}

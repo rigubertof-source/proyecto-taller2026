@@ -1,0 +1,143 @@
+<div class="caja">
+  <h4>Asignación Roles a Usuario</h4>
+
+  <div class="paneles">
+    <div class="panel panel-izquierdo">
+      <h5 class="subtitulo-panel">Lista de Usuarios</h5>
+
+      <form class="bar d-flex align-items-center flex-wrap gap-2" (submit)="$event.preventDefault()">
+        <div class="search-box d-flex align-items-center gap-2">
+          <label class="me-1 mb-0" style="font-size: 0.85rem;">Filtro:</label>
+          <input type="text" class="form-control form-control-sm" style="width: 140px;"
+                 name="filtroUsuario" [(ngModel)]="filtroUsuario"
+                 (ngModelChange)="paginaUsuarioActual = 1" placeholder="Buscar usuario..." />
+        </div>
+      </form>
+
+      <table class="table">
+        <thead>
+          <tr>
+            <th style="width: 30px;"></th>
+            <th style="width: 30px;">#</th>
+            <th>LISTA DE USUARIOS</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (usu of usuariosPaginados; track usu.login; let i = $index) {
+          <tr [class.fila-seleccionada]="usuarioSeleccionado?.login === usu.login">
+            <td style="text-align: center;">
+              <input class="form-check-input" type="radio" name="usuarioRadio"
+                     [checked]="usuarioSeleccionado?.login === usu.login"
+                     (change)="seleccionarUsuario(usu)">
+            </td>
+            <td>{{ (paginaUsuarioActual - 1) * itemsPorPaginaUsuario + i + 1 }}</td>
+            <td>{{ usu.login }}</td>
+          </tr>
+          } @empty {
+          <tr><td colspan="3" class="text-center">No hay usuarios</td></tr>
+          }
+        </tbody>
+      </table>
+
+      <nav aria-label="Paginación de usuarios">
+        <ul class="pagination justify-content-center">
+          <li class="page-item" [class.disabled]="paginaUsuarioActual === 1">
+            <a class="page-link" href="javascript:void(0)" (click)="paginaAnteriorUsuario()"> << </a>
+          </li>
+          @for (p of paginasUsuario; track p) {
+          <li class="page-item" [class.active]="p === paginaUsuarioActual">
+            <a class="page-link" href="javascript:void(0)" (click)="irPaginaUsuario(p)">{{ p }}</a>
+          </li>
+          }
+          <li class="page-item" [class.disabled]="paginaUsuarioActual === totalPaginasUsuario">
+            <a class="page-link" href="javascript:void(0)" (click)="paginaSiguienteUsuario()"> >> </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+
+    <div class="panel panel-derecho">
+      <h5 class="subtitulo-panel">Lista de Roles</h5>
+
+      <form class="bar d-flex align-items-center flex-wrap gap-2" (submit)="$event.preventDefault()">
+        <div class="search-box d-flex align-items-center gap-2 w-100 justify-content-between">
+          <div class="d-flex align-items-center gap-1">
+            <label class="me-1 mb-0" style="font-size: 0.85rem;">Filtro:</label>
+            <input type="text" class="form-control form-control-sm" style="width: 120px;"
+                   name="filtroRol" [(ngModel)]="filtroRol"
+                   (ngModelChange)="aplicarFiltrosRoles()" placeholder="Buscar..." />
+          </div>
+
+          <div class="form-check mb-0">
+            <input class="form-check-input" type="radio" name="filtroAsig" id="fTodos" value="todos"
+                   [ngModel]="filtroAsignacion" (ngModelChange)="filtroAsignacion = $event; aplicarFiltrosRoles()">
+            <label class="form-check-label ms-1" for="fTodos">Todos</label>
+          </div>
+          <div class="form-check mb-0">
+            <input class="form-check-input" type="radio" name="filtroAsig" id="fAsignados" value="asignados"
+                   [ngModel]="filtroAsignacion" (ngModelChange)="filtroAsignacion = $event; aplicarFiltrosRoles()">
+            <label class="form-check-label ms-1" for="fAsignados">Sí asig.</label>
+          </div>
+          <div class="form-check mb-0">
+            <input class="form-check-input" type="radio" name="filtroAsig" id="fNoAsignados" value="noAsignados"
+                   [ngModel]="filtroAsignacion" (ngModelChange)="filtroAsignacion = $event; aplicarFiltrosRoles()">
+            <label class="form-check-label ms-1" for="fNoAsignados">No asig.</label>
+          </div>
+        </div>
+      </form>
+
+      <table class="table">
+        <thead>
+          <tr>
+            <th style="width: 30px;"></th>
+            <th style="width: 30px;">#</th>
+            <th>LISTA DE ROLES</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (rol of rolesPaginados; track rol.codr; let i = $index) {
+          <tr [class.fila-seleccionada]="rolesSeleccionados.has(rol.codr!)">
+            <td style="text-align: center;">
+              <input class="form-check-input" type="checkbox"
+                     [checked]="rolesSeleccionados.has(rol.codr!)"
+                     (change)="toggleRol(rol)"
+                     [disabled]="!usuarioSeleccionado">
+            </td>
+            <td>{{ (paginaRolActual - 1) * itemsPorPaginaRol + i + 1 }}</td>
+            <td>{{ rol.nombre }}</td>
+          </tr>
+          } @empty {
+          <tr><td colspan="3" class="text-center">No hay roles</td></tr>
+          }
+        </tbody>
+      </table>
+
+      <nav aria-label="Paginación de roles">
+        <ul class="pagination justify-content-center">
+          <li class="page-item" [class.disabled]="paginaRolActual === 1">
+            <a class="page-link" href="javascript:void(0)" (click)="paginaAnteriorRol()"> << </a>
+          </li>
+          @for (p of paginasRol; track p) {
+          <li class="page-item" [class.active]="p === paginaRolActual">
+            <a class="page-link" href="javascript:void(0)" (click)="irPaginaRol(p)">{{ p }}</a>
+          </li>
+          }
+          <li class="page-item" [class.disabled]="paginaRolActual === totalPaginasRol">
+            <a class="page-link" href="javascript:void(0)" (click)="paginaSiguienteRol()"> >> </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+
+  <div class="acciones mt-3 text-center">
+    <button class="btn btn-primary" (click)="guardarAsignacion()" [disabled]="!usuarioSeleccionado">
+      Guardar Asignación
+    </button>
+  </div>
+</div>
+
+<div class="mi-toast" [class.visible]="toastVisible" [class.error]="toastTipo === 'error'">
+  <span class="mi-toast-icon">{{ toastTipo === 'error' ? '✕' : '✓' }}</span>
+  <span class="mi-toast-msg">{{ toastMensaje }}</span>
+</div>

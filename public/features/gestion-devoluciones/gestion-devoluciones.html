@@ -1,0 +1,156 @@
+<div class="caja">
+    <h4>Gestión de Devoluciones</h4>
+
+    <form class="bar d-flex align-items-center flex-nowrap gap-4" (submit)="$event.preventDefault()">
+        <div class="d-flex align-items-center">
+            <label class="me-2 mb-0 text-nowrap">Fecha Inicio:</label>
+            <input type="date" class="form-control form-control-sm" style="width: 150px"
+                [formControl]="fechaIniControl" (input)="paginaP = 1">
+        </div>
+        <div class="d-flex align-items-center">
+            <label class="me-2 mb-0 text-nowrap">Fecha Fin:</label>
+            <input type="date" class="form-control form-control-sm" style="width: 150px"
+                [formControl]="fechaFinControl" (input)="paginaP = 1">
+        </div>
+        <div class="d-flex align-items-center">
+            <label class="me-2 mb-0 text-nowrap">Estudiante:</label>
+            <input type="text" class="form-control form-control-sm" style="width: 170px"
+                placeholder="Nombre o apellido" [formControl]="buscarControl" (input)="paginaP = 1">
+        </div>
+        <div class="d-flex align-items-center">
+            <label class="me-2 mb-0 text-nowrap">Nro. Préstamo:</label>
+            <input type="number" min="1" class="form-control form-control-sm" style="width: 110px"
+                placeholder="Nro." [formControl]="nroControl" (input)="paginaP = 1">
+        </div>
+        <div class="d-flex align-items-center gap-3 ms-2">
+            <div class="form-check mb-0 d-flex align-items-center gap-1">
+                <input type="radio" class="form-check-input mt-0" name="estadoD" id="dDevueltos"
+                    [checked]="estadoFiltro === 'devueltos'" (change)="cambiarEstadoFiltro('devueltos')">
+                <label class="form-check-label" for="dDevueltos">Devueltos</label>
+            </div>
+            <div class="form-check mb-0 d-flex align-items-center gap-1">
+                <input type="radio" class="form-check-input mt-0" name="estadoD" id="dPrestados"
+                    [checked]="estadoFiltro === 'prestados'" (change)="cambiarEstadoFiltro('prestados')">
+                <label class="form-check-label" for="dPrestados">Prestados</label>
+            </div>
+        </div>
+    </form>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th style="width: 40px;">#</th>
+                <th>CodPres.</th>
+                <th>Fecha</th>
+                <th>Estudiante</th>
+                <th>F. Inicio</th>
+                <th>F. Fin</th>
+                <th>Tipo Pres.</th>
+                <th class="text-center">Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (p of prestamosPaginados; track p.codp) {
+            <tr [class.fila-seleccionada]="prestamoSeleccionado?.codp === p.codp">
+                <td class="text-center">
+                    <input class="form-check-input" type="radio" name="prestamoRadio"
+                        [checked]="prestamoSeleccionado?.codp === p.codp" (change)="seleccionarPrestamo(p)">
+                </td>
+                <td>{{ p.codp }}</td>
+                <td>{{ p.fecha | date:'dd/MM/yyyy' }}</td>
+                <td>{{ nombreCompleto(p) }}</td>
+                <td>{{ p.fini | date:'dd/MM/yyyy' }}</td>
+                <td>{{ p.ffin | date:'dd/MM/yyyy' }}</td>
+                <td>{{ p.tipopres === 1 ? 'En Sala' : 'Domicilio' }}</td>
+                <td class="text-center">
+                    <img class="f15" [src]="p.pendiente ? 'no.png' : 'si.png'"
+                        [title]="p.pendiente ? 'Con ejemplares prestados' : 'Devuelto por completo'"
+                        [alt]="p.pendiente ? 'Prestado' : 'Devuelto'">
+                </td>
+            </tr>
+            } @empty {
+            <tr><td colspan="8" class="text-center">No se encontraron préstamos.</td></tr>
+            }
+        </tbody>
+    </table>
+
+    <nav aria-label="Paginación de préstamos">
+        <ul class="pagination justify-content-center">
+            <li class="page-item" [class.disabled]="paginaP === 1">
+                <a class="page-link" href="javascript:void(0)" (click)="irPaginaP(paginaP - 1)"> &lt;&lt; </a>
+            </li>
+            @for (p of paginasP; track p) {
+            <li class="page-item" [class.active]="p === paginaP">
+                <a class="page-link" href="javascript:void(0)" (click)="irPaginaP(p)">{{ p }}</a>
+            </li>
+            }
+            <li class="page-item" [class.disabled]="paginaP === totalPaginasP">
+                <a class="page-link" href="javascript:void(0)" (click)="irPaginaP(paginaP + 1)"> &gt;&gt; </a>
+            </li>
+        </ul>
+    </nav>
+
+    <h6 class="detalle-titulo">.:: D E T A L L E &nbsp; D E &nbsp; P R É S T A M O ::.</h6>
+    @if (prestamoSeleccionado) {
+    <p class="text-center text-muted mb-2">Préstamo Nº {{ prestamoSeleccionado.codp }} — {{ nombreCompleto(prestamoSeleccionado) }}</p>
+    }
+    <table class="table tabla-detalle">
+        <thead>
+            <tr>
+                <th>Cod.Inv.</th>
+                <th>Título Ejemplar</th>
+                <th class="text-center">Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (d of listaDetalle; track d.codinv) {
+            <tr>
+                <td>{{ d.codinv }}</td>
+                <td>{{ d.titulo }}</td>
+                <td class="text-center">
+                    <input type="checkbox" class="form-check-input check-devol"
+                        [checked]="marcado(d)" [disabled]="estaDevuelto(d)"
+                        [title]="estaDevuelto(d) ? 'Ya devuelto' : 'Marcar para devolver'"
+                        (change)="alternar(d, $any($event.target).checked)">
+                </td>
+            </tr>
+            } @empty {
+            <tr>
+                <td colspan="3" class="text-center">
+                    {{ prestamoSeleccionado ? 'Sin ejemplares.' : 'Seleccione un préstamo.' }}
+                </td>
+            </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="text-center mt-3">
+        <button type="button" class="btn btn-primary px-4"
+            [disabled]="seleccionados.size === 0" (click)="pedirConfirmacion()">
+            Guardar Devolución
+        </button>
+    </div>
+</div>
+
+<div class="modal fade" #confModal tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header py-2"></div>
+            <div class="modal-body text-center">
+                <p>¿Seguro de <strong>guardar la devolución</strong> de
+                    <strong>{{ seleccionados.size }}</strong> ejemplar(es) del préstamo
+                    <strong>{{ prestamoSeleccionado?.codp }}</strong>?</p>
+            </div>
+            <div class="modal-footer justify-content-center gap-2 py-2">
+                <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary btn-sm px-3" (click)="confirmarGuardar()">Aceptar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div class="mi-toast" [class.visible]="toastVisible" [class.error]="toastTipo === 'error'">
+    <span class="mi-toast-icon">{{ toastTipo === 'error' ? '✕' : '✓' }}</span>
+    <span class="mi-toast-msg">{{ toastMensaje }}</span>
+</div>

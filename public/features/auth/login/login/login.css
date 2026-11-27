@@ -1,0 +1,46 @@
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  z-index: 9999;
+}
+
+.modal-login {
+  border: solid 1px black;
+  background: white;
+  width: 300px;
+  padding: 30px;
+  border-radius: 10px;
+  position: relative;
+}
+
+.btn-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+form {
+  padding-left: 6px;
+  
+}
+
+.inp1 {
+  width: 150px;
+  margin-left: 37px;
+}
+
+.inp2 {
+  width: 150px;
+  margin-left: 10px;
+}
+.btn-dark{
+  margin-left: 25px;
+}

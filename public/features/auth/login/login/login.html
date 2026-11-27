@@ -1,0 +1,26 @@
+<div class="modal-overlay">
+    <div class="modal-login">
+        <div class="caja">
+            <h4>Conexión al sistema</h4><br>
+            <form [formGroup]="regForm" (ngSubmit)="getForLogin_boton()">
+                <label for="login" class="form-label">Login:</label>
+                <input class="inp1" type="text" id="login" formControlName="login">
+                <br><br>
+                <label for="password" class="form-label">Password:</label>
+                <input class="inp2" type="password" id="password" formControlName="password"
+                    (input)="mensajeError = ''">
+
+                @if (mensajeError) {
+                <div class="alert alert-danger py-2 mt-3 mb-0" role="alert">
+                    {{ mensajeError }}
+                </div>
+                }
+
+                <br><br>
+                <button type="submit" class="btn btn-dark">Enviar</button>
+                <button type="reset" class="btn btn-dark" (click)="cerrarModal()">Cancelar
+                </button>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,489 @@
+<button data-bs-toggle="modal" data-bs-target="#exampleModal" class="bot" (click)="limpiarAgregar()">
+  <img class="img1" src="add1.png" alt=""> <br>Nuevo Personal
+</button>
+<div class="caja">
+  <h4>Gestion Usuarios</h4>
+
+  <form class="bar d-flex align-items-center flex-wrap gap-4" (submit)="$event.preventDefault()">
+    <div class="search-box d-flex align-items-center flex-wrap gap-4">
+
+      <div class="d-flex align-items-center">
+        <label class="me-2 mb-0">Filtro:</label>
+        <input type="text" class="form-control form-control-sm" style="width: 180px;" (input)="onBuscarInput($event)" />
+      </div>
+
+      <div class="d-flex align-items-center">
+        <label class="me-2 mb-0">Tipo Personal:</label>
+        <select class="form-select form-select-sm" style="width: 180px;"
+          (change)="listarPorTipo($any($event.target).value)">
+          <option value="" disabled selected>tipo</option>
+          <option value="P">Público</option>
+          <option value="A">Administrativo</option>
+        </select>
+      </div>
+
+      <div class="d-flex align-items-center gap-4">
+        <div class="form-check mb-0">
+          <input type="radio" class="form-check-input" name="filtroEstado" id="activos" (change)="listarPorEstado(1)">
+          <label class="form-check-label ms-1" for="activos">Activos</label>
+        </div>
+
+        <div class="form-check mb-0">
+          <input type="radio" class="form-check-input" name="filtroEstado" id="bajas" (change)="listarPorEstado(0)">
+          <label class="form-check-label ms-1" for="bajas">Bajas</label>
+        </div>
+
+        <div class="form-check mb-0">
+          <input type="radio" class="form-check-input" name="filtroEstado" id="todos" (change)="mostrar()">
+          <label class="form-check-label ms-1" for="todos">Todos</label>
+        </div>
+      </div>
+
+    </div>
+  </form>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th scope="col">foto</th>
+        <th scope="col">Apellido y nombres</th>
+        <th scope="col">Estado</th>
+        <th scope="col">M</th>
+        <th scope="col">B</th>
+        <th scope="col">H</th>
+        <th scope="col">V</th>
+        <th scope="col">K</th>
+      </tr>
+    </thead>
+    <tbody>
+
+      @for(dat of listaPaginada; track dat.codper) {
+      <tr>
+        <td>
+          <img [src]="urlFoto(dat.foto)" #imagenUsuario (error)="imagenUsuario.src = 'user.png'" class="imglis">
+        </td>
+        <td>{{dat.ap}} {{dat.am}} {{dat.nombre}}</td>
+        <td>@if(dat.estado===1){
+          <img src="si.png" alt="" style="width: 50px;">
+          }@else{
+          <img src="no.png" alt="" style="width: 50px;">
+          }
+        </td>
+        <td>
+          @if (dat.codper !== undefined) {
+          <img class="fo12" src="mod.png" (click)="cargarPersonal(dat.codper)" title="modificar">
+          }
+        </td>
+        <td>
+          <img class="fo13" src="eliminar.png" alt="Eliminar" style="cursor: pointer;"
+            [style.opacity]="dat.estado === 0 ? 0.9 : 1" (click)="prepararCambioEstado(dat, 0)" title="Dar de baja">
+        </td>
+        <td>
+          <img class="fo14" src="hab.png" alt="Habilitar" style="cursor: pointer;"
+            [style.opacity]="dat.estado === 1 ? 0.9 : 1" (click)="prepararCambioEstado(dat, 1)" title="Habilitar">
+        </td>
+        <td>
+          <img class="fo15" src="impri.png" alt="Ficha" style="cursor:pointer" (click)="abrirFicha(dat)" title="ver">
+        </td>
+        <td>
+          <img class="fo16" [src]="conUsuario().has(dat.codper) ? 'cerrado.png' : 'abierto.png'"
+            [title]="conUsuario().has(dat.codper) ? 'Modificar datos de acceso' : 'Crear datos de acceso'" alt=""
+            style="cursor:pointer" (click)="abrirUsuario(dat)">
+        </td>
+      </tr>
+      }
+    </tbody>
+  </table>
+
+  <!-- Paginador -->
+  <nav aria-label="Paginación de personas">
+    <ul class="pagination justify-content-center">
+      <li class="page-item" [class.disabled]="paginaActual === 1">
+        <a class="page-link" href="javascript:void(0)" (click)="paginaAnterior()">
+          << </a>
+      </li>
+
+      @for (p of paginas; track p) {
+      <li class="page-item" [class.active]="p === paginaActual">
+        <a class="page-link" href="javascript:void(0)" (click)="irPagina(p)">{{ p }}</a>
+      </li>
+      }
+
+      <li class="page-item" [class.disabled]="paginaActual === totalPaginas">
+        <a class="page-link" href="javascript:void(0)" (click)="paginaSiguiente()"> >> </a>
+      </li>
+    </ul>
+  </nav>
+</div>
+
+<!-- Modal Modificar Persona -->
+<div class="modal fade" #modModal id="modificarModal" tabindex="-1" aria-labelledby="modificarModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modificarModalLabel">Modificar Datos de Persona</h5>
+      </div>
+      <form [formGroup]="regFormModificar" (ngSubmit)="guardarModificacion()">
+        <div class="modal-body">
+
+          <div class="row mb-2 align-items-center">
+            <label class="col-4 col-form-label text-end">Cédula:</label>
+            <div class="col-8">
+              <input type="text" formControlName="ci" class="form-control form-control-sm" placeholder="Cédula">
+            </div>
+          </div>
+
+          <div class="row mb-2 align-items-center">
+            <label class="col-4 col-form-label text-end">Nombre:</label>
+            <div class="col-8">
+              <input type="text" formControlName="nombre" class="form-control form-control-sm" placeholder="Nombre">
+            </div>
+          </div>
+
+          <div class="row mb-2 align-items-center">
+            <label class="col-4 col-form-label text-end">Ap. Paterno:</label>
+            <div class="col-8">
+              <input type="text" formControlName="ap" class="form-control form-control-sm"
+                placeholder="Apellido paterno">
+            </div>
+          </div>
+
+          <div class="row mb-2 align-items-center">
+            <label class="col-4 col-form-label text-end">Ap. Materno:</label>
+            <div class="col-8">
+              <input type="text" formControlName="am" class="form-control form-control-sm"
+                placeholder="Apellido materno">
+            </div>
+          </div>
+
+          <div class="row mb-2 align-items-center">
+            <label class="col-4 col-form-label text-end">Género:</label>
+            <div class="col-8">
+              <select formControlName="genero" class="form-select form-select-sm">
+                <option value="" disabled selected>Seleccione género</option>
+                <option value="M">Masculino</option>
+                <option value="F">Femenino</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row mb-2 align-items-center">
+            <label class="col-4 col-form-label text-end">Tipo Persona:</label>
+            <div class="col-8">
+              <select formControlName="tipoper" class="form-select form-select-sm">
+                <option value="" disabled selected>Seleccione tipo</option>
+                <option value="P">Público</option>
+                <option value="A">Administrativo</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row mb-2 align-items-center">
+            <label class="col-4 col-form-label text-end">Foto:</label>
+            <div class="col-8 d-flex align-items-center gap-2">
+              <input type="text" class="form-control" readonly
+                [value]="archivoMod?.name || regFormModificar.get('foto')?.value || ''"
+                placeholder="Ninguna foto seleccionada">
+              <input #fileMod type="file" accept="image/*" hidden (change)="onFotoSeleccionada($event, 'mod')">
+              <button type="button" class="btn btn-outline-secondary btn-sm" (click)="fileMod.click()">Browse</button>
+              <small class="text-muted text-truncate">{{ archivoMod?.name }}</small>
+            </div>
+          </div>
+
+          <div class="row mt-3">
+            <label class="col-4 col-form-label text-end">Teléfonos:</label>
+            <div class="col-8">
+              <div class="border rounded p-2">
+                <div class="">
+                  <span class="small fw-semibold">Números Telefónicos</span> <br>
+                  <button type="button" class="btn btn-sm btn-outline-primary px-2 py-0" title="Agregar teléfono"
+                    (click)="agregarTelefono(telefonosMod)">+</button>
+                </div>
+                <div formArrayName="telefonos">
+                  @for (t of telefonosMod.controls; track $index) {
+                  <div class="input-group input-group-sm mb-1">
+                    <input type="text" [formControlName]="$index" class="form-control">
+                  </div>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <div class="modal-footer justify-content-center gap-3">
+          <button type="submit" class="btn btn-primary px-4">Modificar</button>
+          <button type="button" class="btn btn-secondary px-4" (click)="cerrarModal()">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<!-- Modal Adicionar Persona -->
+<div class="modal fade" #addModal id="exampleModal" tabindex="-1" aria-labelledby="adicionarModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="adicionarModalLabel">Adicionar Nueva Persona</h5>
+      </div>
+      <form [formGroup]="regFormAgregar" (ngSubmit)="enviarDatos()">
+        <div class="modal-body">
+
+          <div class="row mb-2 align-items-center">
+            <label class="col-4 col-form-label text-end">Cédula:</label>
+            <div class="col-8">
+              <input type="text" formControlName="ci" class="form-control form-control-sm" placeholder="Cédula">
+            </div>
+          </div>
+
+          <div class="row mb-2 align-items-center">
+            <label class="col-4 col-form-label text-end">Nombre:</label>
+            <div class="col-8">
+              <input type="text" formControlName="nombre" class="form-control form-control-sm" placeholder="Nombre">
+            </div>
+          </div>
+
+          <div class="row mb-2 align-items-center">
+            <label class="col-4 col-form-label text-end">Ap. Paterno:</label>
+            <div class="col-8">
+              <input type="text" formControlName="ap" class="form-control form-control-sm"
+                placeholder="Apellido paterno">
+            </div>
+          </div>
+
+          <div class="row mb-2 align-items-center">
+            <label class="col-4 col-form-label text-end">Ap. Materno:</label>
+            <div class="col-8">
+              <input type="text" formControlName="am" class="form-control form-control-sm"
+                placeholder="Apellido materno">
+            </div>
+          </div>
+
+          <div class="row mb-2 align-items-center">
+            <label class="col-4 col-form-label text-end">Género:</label>
+            <div class="col-8">
+              <select formControlName="genero" class="form-select form-select-sm">
+                <option value="" disabled selected>Seleccione género</option>
+                <option value="M">Masculino</option>
+                <option value="F">Femenino</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row mb-2 align-items-center">
+            <label class="col-4 col-form-label text-end">Tipo Persona:</label>
+            <div class="col-8">
+              <select formControlName="tipoper" class="form-select form-select-sm">
+                <option value="" disabled selected>Seleccione tipo</option>
+                <option value="P">Público</option>
+                <option value="A">Administrativo</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row mb-2 align-items-center">
+            <label class="col-4 col-form-label text-end">Foto:</label>
+            <div class="col-8 d-flex align-items-center gap-2">
+              <input type="text" class="form-control">
+              <input #fileAdd type="file" accept="image/*" hidden (change)="onFotoSeleccionada($event, 'add')">
+              <button type="button" class="btn btn-outline-secondary btn-sm" (click)="fileAdd.click()">Browse</button>
+              <small class="text-muted text-truncate">{{ archivoAdd?.name }}</small>
+            </div>
+          </div>
+
+          <div class="row mt-3">
+            <label class="col-4 col-form-label text-end">Teléfonos:</label>
+            <div class="col-8">
+              <div class="border rounded p-2">
+                <div class="">
+                  <span class="small fw-semibold">Números Telefónicos</span> <br>
+                  <button type="button" class="btn btn-sm btn-outline-primary px-2 py-0" title="Agregar teléfono"
+                    (click)="agregarTelefono(telefonosAdd)">+</button>
+                </div>
+                <div formArrayName="telefonos">
+                  @for (t of telefonosAdd.controls; track $index) {
+                  <div class="input-group input-group-sm mb-1">
+                    <input type="text" [formControlName]="$index" class="form-control">
+                  </div>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <div class="modal-footer justify-content-center gap-3">
+          <button type="submit" class="btn btn-primary px-4">Guardar</button>
+          <button type="button" #botoncerrar class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<!-- Modal Usuario -->
+<div class="modal fade" #usuModal id="usuarioModal" tabindex="-1" aria-labelledby="usuarioModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="usuarioModalLabel">
+          {{ tieneUsuario() ? 'Modificar Datos de Acceso' : 'Crear Datos de Acceso' }}
+        </h5>
+      </div>
+
+      <form [formGroup]="regFormUsuario" (ngSubmit)="guardarUsuario()">
+        <div class="modal-body">
+
+          <p class="mb-3">
+            [{{ personaUsu()?.nombre }} {{ personaUsu()?.ap }} {{ personaUsu()?.am }}]
+          </p>
+
+          <div class="row mb-2">
+            <label class="col-sm-5 col-form-label">Nombre del Usuario:</label>
+            <div class="col-sm-7">
+              <input type="text" formControlName="login" class="form-control">
+            </div>
+          </div>
+
+          <div class="row mb-2">
+            <label class="col-sm-5 col-form-label">Password:</label>
+            <div class="col-sm-7">
+              <input type="password" formControlName="passwd" class="form-control">
+            </div>
+          </div>
+
+          <div class="row mb-2">
+            <label class="col-sm-5 col-form-label">Repetir Password:</label>
+            <div class="col-sm-7">
+              <input type="password" formControlName="repasswd" class="form-control">
+            </div>
+          </div>
+
+          @if (regFormUsuario.hasError('noCoinciden') && regFormUsuario.get('repasswd')?.dirty) {
+          <div class="text-danger small text-end">Las contraseñas no coinciden.</div>
+          }
+        </div>
+
+        <div class="modal-footer justify-content-center">
+          <button type="submit" class="btn btn-primary">
+            {{ tieneUsuario() ? 'Modificar' : 'Crear' }}
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="cerrarModalUsuario()">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<!--confirmación de estado -->
+<div class="modal fade" #confModal id="confirmarEstadoModal" tabindex="-1" aria-labelledby="confirmarEstadoModalLabel"
+  aria-hidden="true">
+
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+      </div>
+      <div class="modal-body text-center">
+        @switch (accionPendiente) {
+        @case ('agregarPersona') {
+        <p>¿Seguro de <strong>agregar</strong> a la persona
+          <strong>{{ regFormAgregar.get('nombre')?.value }} {{ regFormAgregar.get('ap')?.value }}</strong>?
+        </p>
+        }
+        @case ('modificarPersona') {
+        <p>¿Seguro de <strong>modificar</strong> a la persona
+          <strong>{{ regFormModificar.get('nombre')?.value }} {{ regFormModificar.get('ap')?.value }}</strong>?
+        </p>
+        }
+        @case ('usuario') {
+        <p>¿Seguro de <strong>{{ tieneUsuario() ? 'modificar' : 'crear' }}</strong> los datos de acceso de
+          <strong>{{ personaUsu()?.nombre }} {{ personaUsu()?.ap }}</strong>?
+        </p>
+        }
+        @case ('estado') {
+        @if (estadoPendiente === 0) {
+        <p>¿Seguro de dar de baja a la persona <strong>{{ personaPendiente?.nombre }} {{ personaPendiente?.ap
+            }}</strong>?</p>
+        } @else if (estadoPendiente === 1) {
+        <p>¿Seguro de habilitar a la persona <strong>{{ personaPendiente?.nombre }} {{ personaPendiente?.ap }}</strong>?
+        </p>
+        }
+        }
+        }
+      </div>
+      <div class="modal-footer justify-content-center gap-2 py-2">
+        <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal"
+          (click)="cancelarCambioEstado()">
+          Cancelar
+        </button>
+        <button type="button" class="btn btn-primary btn-sm px-3" data-bs-dismiss="modal" (click)="confirmarAccion()">
+          Aceptar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Modal Ficha de Persona -->
+<div class="modal fade" #impModal id="fichaModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Datos de la Persona</h5>
+      </div>
+
+      @if (personaImp(); as p) {
+      <div class="modal-body">
+        <div class="text-center mb-3">
+          <img [src]="urlFoto(p.foto)" alt="Foto"
+            style="width:120px;height:120px;object-fit:cover;border-radius:50%;border:2px solid #ccc">
+        </div>
+
+        <table class="table table-sm table-borderless mb-0">
+          <tbody>
+            <tr>
+              <th class="text-end" style="width:35%">Nombre:</th>
+              <td>{{ p.nombre }} {{ p.ap }} {{ p.am }}</td>
+            </tr>
+            <tr>
+              <th class="text-end">Cédula:</th>
+              <td>{{ p.datos?.ci || '—' }}</td>
+            </tr>
+            <tr>
+              <th class="text-end">Tipo:</th>
+              <td>{{ p.tipoper === 'A' ? 'Administrativo' : 'Público' }}</td>
+            </tr>
+            <tr>
+              <th class="text-end">Estado:</th>
+              <td>{{ p.estado === 1 ? 'Activo' : 'Baja' }}</td>
+            </tr>
+            <tr>
+              <th class="text-end">Género:</th>
+              <td>{{ p.genero === 'M' ? 'Masculino' : p.genero === 'F' ? 'Femenino' : '—' }}</td>
+            </tr>
+            <tr>
+              <th class="text-end align-top">Teléfonos:</th>
+              <td>
+                @for (t of p.telefonos ?? []; track t.id.numero) {
+                <div>{{ t.id.numero }}</div>
+                } @empty {
+                —
+                }
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      }
+
+      <div class="modal-footer justify-content-center gap-3 no-print">
+        <button type="button" class="btn btn-primary px-4" (click)="imprimirFicha()">Imprimir</button>
+        <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="mi-toast" [class.visible]="toastVisible" [class.error]="toastTipo === 'error'">
+  <span class="mi-toast-icon">{{ toastTipo === 'error' ? '✕' : '✓' }}</span>
+  <span class="mi-toast-msg">{{ toastMensaje }}</span>
+</div>

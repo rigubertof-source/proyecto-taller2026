@@ -1,0 +1,194 @@
+.caja {
+  width: 100%;
+}
+
+.bot {
+  float: right;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.img1 {
+  width: 40px;
+  padding-bottom: 20px;
+}
+
+.bar {
+  padding-top: 30px;
+  padding-bottom: 15px;
+}
+
+.table {
+  background-color: transparent;
+  margin-top: 20px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.table thead th {
+  border-bottom: 1px solid #e0e0e0;
+  border-top: none;
+  color: #6c757d;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  padding: 15px 10px;
+  text-align: left;
+}
+
+.table tbody td {
+  vertical-align: middle;
+  padding: 12px 10px;
+  border-bottom: 1px solid #f0f0f0;
+  color: #333;
+  font-size: 0.95rem;
+  text-align: left;
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) > * {
+  --bs-table-accent-bg: transparent;
+  background-color: #fff;
+}
+
+.fo12, .fo13, .fo14 {
+  width: 20px !important;
+  height: 20px !important;
+  object-fit: contain;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.fo12:hover, .fo13:hover, .fo14:hover {
+  transform: scale(1.15);
+}
+
+td img[src*="si.png"],
+td img[src*="no.png"] {
+  width: 24px !important;
+  height: 24px !important;
+  object-fit: contain;
+}
+
+.btn-icono {
+  border: none;
+  background: transparent;
+  padding: 2px;
+  cursor: pointer;
+}
+
+.btn-icono:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.modal-persona-content {
+  border: 2px solid #6c757d;
+  border-radius: 14px;
+  background: #f2f2f2;
+  overflow: hidden;
+}
+
+.modal-persona-header {
+  background: #e4e4e4;
+  border-bottom: 1px solid #bdbdbd;
+  padding: 10px 16px;
+}
+
+.modal-persona-header .modal-title {
+  font-weight: 600;
+  font-size: 15px;
+  color: #333;
+}
+
+.modal-persona-body {
+  padding: 16px 24px;
+}
+
+.row-persona {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.label-persona {
+  width: 110px;
+  text-align: right;
+  font-size: 14px;
+  color: #333;
+  flex-shrink: 0;
+}
+
+.input-persona {
+  flex: 1;
+  min-width: 0;
+  height: 30px;
+  border: 1px solid #9e9e9e;
+  border-radius: 3px;
+  padding: 0 8px;
+  font-size: 13px;
+  background: #fff;
+}
+
+.modal-persona-footer {
+  justify-content: center;
+  gap: 20px;
+  border-top: none;
+  padding-bottom: 16px;
+}
+
+.btn-accion {
+  min-width: 110px;
+  border-radius: 4px;
+  padding: 5px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  border: 1px solid #7a7a7a;
+  cursor: pointer;
+}
+
+.btn-guardar {
+  background: linear-gradient(#7db3e8, #3b77c2);
+}
+
+.btn-cancelar {
+  background: linear-gradient(#9fc1e8, #5a8fd0);
+}
+
+.mi-toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  min-width: 260px;
+  max-width: 380px;
+  padding: 12px 18px;
+  border-radius: 8px;
+  background: #073957;
+  color: #fff;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  pointer-events: none;
+  z-index: 20000;
+}
+
+.mi-toast.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.mi-toast.error {
+  background: #c62828;
+}
+
+.mi-toast-icon {
+  font-weight: bold;
+  font-size: 1.1rem;
+}

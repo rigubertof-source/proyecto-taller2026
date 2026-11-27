@@ -1,0 +1,126 @@
+<div class="layout-container" [class.mobile-open]="isMobileOpen">
+  <div class="sidebar-overlay" (click)="closeMobileSidebar()"></div>
+
+  <aside class="sidebar" [class.collapsed]="isCollapsed">
+    <div class="sidebar-header">
+      <img class="img0" src="logo-b.svg" alt="">
+    </div>
+    <nav class="sidebar-nav">
+      <ul>
+        @if (userData?.status) {
+        @for (menu of listaMenu; track menu.codm) {
+        <li class="has-submenu" [class.open]="openMenusa === menu.codm">
+          <button (click)="toggleSubmenus(menu.codm)">
+            <i class="icon"></i>
+            <span class="link-text">{{ menu.nombre }}</span>
+            <span class="arrow">›</span>
+          </button>
+          <ul class="submenu">
+            @for (proceso of menu.procesos; track proceso.codp) {
+            <li>
+              <a [routerLink]="proceso.enlace" (click)="closeMobileSidebar()">{{ proceso.nombre }}</a>
+            </li>
+            }
+          </ul>
+        </li>
+        }
+        } @else {
+        <li><a routerLink="principal" (click)="closeMobileSidebar()">Página principal</a></li>
+        <li><a routerLink="info" (click)="closeMobileSidebar()">Quienes somos</a></li>
+        <li><a routerLink="contacto" (click)="closeMobileSidebar()">Contacto</a></li>
+        }
+      </ul>
+    </nav>
+  </aside>
+
+  <div class="main-wrapper">
+    <div class="container-fluid">
+      <button class="toggle-btn" (click)="toggleSidebar()">☰</button>
+      <a class="navbar-brand fecha-literal">
+        {{ fechaLiteral() }}
+      </a>
+      <form class="d-flex acciones-derecha" role="search">
+        <select class="form-select" id="selectOptions" (change)="cambiarRol($event)">
+          @for (r of roles; track r.codr) {
+          <option [value]="r.codr" [selected]="r.codr === rolActual?.codr">
+            {{ r.nombre }}
+          </option>
+          }
+        </select>
+        <button class="avatar-trigger" onclick="document.getElementById('profileDropdown').classList.toggle('open')">
+          <img class="img1" src="user1.png" alt="Usuario">
+        </button>
+      </form>
+
+    </div>
+
+    <main class="content-body">
+
+
+
+      <router-outlet>
+
+      </router-outlet>
+    </main>
+  </div>
+</div>
+<div class="contenido-principal">
+
+  @if (mostrarLogin) {
+  <app-login (cerrar)="cerrarLogin()"></app-login>
+  }
+</div>
+<!--MODAL-->
+<div class="profile-dropdown" id="profileDropdown">
+  <div class="profile-body">
+
+    <div class="photo-block">
+      <div class="photo-circle">
+        <img class="img4" [src]="previewUrl || urlFoto(userData?.foto)" alt="Vista previa">
+      </div>
+      <button class="change-photo-btn" (click)="abrirModalFoto()">Cambiar foto</button>
+    </div>
+
+    <div class="info-block">
+      @if (userData?.status) {
+      <div class="username">{{ userData?.nombre}}</div>
+      <small class="text-success"></small>
+      } @else {
+      <div class="username">Invitado</div>
+      <small class="text-muted"></small>
+      }
+    </div>
+  </div>
+
+  @if (userData?.status) {
+  <button class="connect-btn logout" (click)="cerrarSesion()">Desconectarse</button>
+  } @else {
+  <button class="connect-btn" (click)="abrirLogin()">Conectarse</button>
+  }
+</div>
+<!--MODIFICAR FOTO -->
+@if (mostrarModalFoto) {
+<div class="modal-overlay" (click)="cerrarModalFoto()">
+  <div class="profile-dropdown modal-foto-card" (click)="$event.stopPropagation()">
+
+    <div class="modal-foto-title">Modificar Foto</div>
+
+    <div class="profile-body">
+      <div class="photo-block">
+
+        <input type="text">
+        <input #fileInput type="file" accept="image/*" hidden (change)="onFileSelected($event)">
+        <button type="button" class="" (click)="fileInput.click()">Browser</button>
+      </div>
+
+
+    </div>
+    <div class="caj">
+      <button class="btn btn-primary" [disabled]="!archivoSeleccionado || guardando" (click)="modificarFoto()">
+        {{ guardando ? 'Guardando...' : 'Modificar' }}
+      </button>
+      <button class="btn btn-secondary" (click)="cerrarModalFoto()">Cancelar</button>
+    </div>
+  </div>
+</div>
+}

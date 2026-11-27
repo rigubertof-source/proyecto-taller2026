@@ -1,0 +1,480 @@
+<button class="bot" type="button" data-bs-toggle="modal" data-bs-target="#agregarTextoModal" (click)="limpiarAgregar()">
+    <img class="img1" src="add1.png" alt="Agregar"> <br>Nuevo Texto
+</button>
+
+<div class="caja">
+    <h4>Gestión de Textos</h4>
+
+    <form class="bar d-flex align-items-center flex-nowrap gap-4" (submit)="$event.preventDefault()">
+
+        <!-- Filtro -->
+        <div class="d-flex align-items-center">
+            <label class="me-2 mb-0 text-nowrap">Filtro:</label>
+            <input id="buscarTexto" type="text" class="form-control form-control-sm" style="width: 160px;"
+                placeholder="Título o Autor (Enter)" [formControl]="buscarControl" (keyup.enter)="onBuscarEnter()" />
+        </div>
+
+        <!-- Editorial -->
+        <div class="d-flex align-items-center">
+            <label class="me-2 mb-0 text-nowrap">Editorial:</label>
+            <select id="filtroEditorial" class="form-select form-select-sm" style="width: 140px"
+                [formControl]="editorialControl" (change)="onFiltroChange()">
+                <option [ngValue]="null">Editoriales...</option>
+                @for (edit of listaEditoriales; track edit.code) {
+                <option [ngValue]="edit.code">{{ edit.nombre }}</option>
+                }
+            </select>
+        </div>
+
+        <!-- Áreas -->
+        <div class="d-flex align-items-center">
+            <label class="me-2 mb-0 text-nowrap">Áreas:</label>
+            <select id="filtroArea" class="form-select form-select-sm" style="width: 120px" [formControl]="areaControl"
+                (change)="onFiltroChange()">
+                <option [ngValue]="null">Áreas...</option>
+                @for (area of listaAreas; track area.coda) {
+                <option [ngValue]="area.coda">{{ area.nombre }}</option>
+                }
+            </select>
+        </div>
+
+        <!-- Tipos -->
+        <div class="d-flex align-items-center">
+            <label class="me-2 mb-0 text-nowrap">Tipos:</label>
+            <select id="filtroTipo" class="form-select form-select-sm" style="width: 120px" [formControl]="tipoControl"
+                (change)="onFiltroChange()">
+                <option [ngValue]="null">Tipos...</option>
+                @for (tipo of listaTipos; track tipo.codtipo) {
+                <option [ngValue]="tipo.codtipo">{{ tipo.nombre }}</option>
+                }
+            </select>
+        </div>
+
+        <!-- Radios de Estado -->
+        <div class="d-flex align-items-center gap-3 ms-2">
+            <div class="form-check mb-0 d-flex align-items-center gap-1">
+                <input type="radio" class="form-check-input mt-0" name="estadoTexto" id="textosActivos"
+                    [checked]="estadoFiltro === 'A'" (change)="cambiarEstado('A')">
+                <label class="form-check-label text-nowrap" for="textosActivos">Activos</label>
+            </div>
+            <div class="form-check mb-0 d-flex align-items-center gap-1">
+                <input type="radio" class="form-check-input mt-0" name="estadoTexto" id="textosBajas"
+                    [checked]="estadoFiltro === 'B'" (change)="cambiarEstado('B')">
+                <label class="form-check-label text-nowrap" for="textosBajas">Bajas</label>
+            </div>
+            <div class="form-check mb-0 d-flex align-items-center gap-1">
+                <input type="radio" class="form-check-input mt-0" name="estadoTexto" id="todosTextos"
+                    [checked]="estadoFiltro === 'T'" (change)="cambiarEstado('T')">
+                <label class="form-check-label text-nowrap" for="todosTextos">Todos</label>
+            </div>
+        </div>
+
+    </form>
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Título</th>
+                <th scope="col">Autores</th>
+                <th scope="col">Área</th>
+                <th scope="col">Editorial</th>
+                <th scope="col">Tipos</th>
+                <th scope="col">Estado</th>
+                <th scope="col">M</th>
+                <th scope="col">B</th>
+                <th scope="col">H</th>
+                <th scope="col">V</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (texto of listaPaginada; track texto.codt) {
+            <tr>
+                <td>{{ texto.titulo }}</td>
+                <td>
+                    @for (a of texto.autores; track a.coda; let last = $last) {
+                    {{ a.nombre }} {{ a.ap }} {{ a.am }}@if (!last) {, } <br>
+                    } @empty {
+                    <span class="text-muted">-</span>
+                    }
+                </td>
+                <td>{{ texto.area?.nombre }}</td>
+                <td>{{ texto.editorial?.nombre }}</td>
+                <td>
+                    @for (t of texto.tipos; track t.codtipo; let last = $last) {
+                    {{ t.nombre }}@if (!last) {, }
+                    } @empty {
+                    <span class="text-muted">-</span>
+                    }
+                </td>
+                <td>
+                    <img [src]="texto.estado === 1 ? 'activo.png' : 'baja.png'"
+                        [title]="texto.estado === 0 ? 'Activo' : 'De baja'" style="width: 22px;">
+                </td>
+                <td>
+                    <img class="fo12" src="mod.png" title="modificar" (click)="cargarTexto(texto.codt!)">
+                </td>
+                <td>
+                    @if (texto.estado === 1) {
+                    <img class="fo13" src="eliminar.png" title="Dar de baja" style="cursor: pointer;"
+                        (click)="prepararBaja(texto)">
+                    }
+                </td>
+                <td>
+                    @if (texto.estado !== 1) {
+                    <img class="fo13" src="habilitar.png" title="Habilitar" style="cursor: pointer;"
+                        (click)="prepararHabilitar(texto)">
+                    }
+                </td>
+                <td>
+                    <img class="fo13" src="impri.png" title="Ver / imprimir" style="cursor: pointer;"
+                        (click)="verTexto(texto)">
+                </td>
+            </tr>
+            } @empty {
+            <tr>
+                <td colspan="10" class="text-center">No se encontraron textos.</td>
+            </tr>
+            }
+        </tbody>
+    </table>
+
+    <!-- Paginador -->
+    <nav aria-label="Paginación de textos">
+        <ul class="pagination justify-content-center">
+            <li class="page-item" [class.disabled]="paginaActual === 1">
+                <a class="page-link" href="javascript:void(0)" (click)="paginaAnterior()">
+                    << </a>
+            </li>
+
+            @for (p of paginas; track p) {
+            <li class="page-item" [class.active]="p === paginaActual">
+                <a class="page-link" href="javascript:void(0)" (click)="irPagina(p)">{{ p }}</a>
+            </li>
+            }
+
+            <li class="page-item" [class.disabled]="paginaActual === totalPaginas">
+                <a class="page-link" href="javascript:void(0)" (click)="paginaSiguiente()"> >> </a>
+            </li>
+        </ul>
+    </nav>
+</div>
+
+<!-- MODAL AGREGAR -->
+<div class="modal fade" #addModal id="agregarTextoModal" tabindex="-1" aria-labelledby="agregarTextoModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content modal-persona-content">
+            <div class="modal-header modal-persona-header">
+                <h5 class="modal-title" id="agregarTextoModalLabel">Adicionar Nuevo Texto ..</h5>
+            </div>
+            <form [formGroup]="regFormAgregar" (ngSubmit)="guardarTexto()">
+                <div class="modal-persona-body">
+
+                    <div class="row mb-3">
+                        <div class="col-md-7 d-flex align-items-center">
+                            <label class="label-persona me-2 mb-0">Titulo:</label>
+                            <input class="input-persona" type="text" formControlName="titulo" maxlength="200">
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-7 d-flex align-items-center">
+                            <label class="label-persona me-2 mb-0">ISBN:</label>
+                            <input class="input-persona" type="text" formControlName="isbn">
+                        </div>
+                        <div class="col-md-5 d-flex align-items-center">
+                            <label class="label-persona me-2 mb-0" style="width: 70px;">Edición:</label>
+                            <input class="input-persona" type="number" formControlName="edicion">
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-7 d-flex align-items-center">
+                            <label class="label-persona me-2 mb-0">Fecha Pub.:</label>
+                            <input class="input-persona" type="date" formControlName="fechapub">
+                        </div>
+                        <div class="col-md-5 d-flex align-items-center">
+                            <label class="label-persona me-2 mb-0" style="width: 70px;">Área:</label>
+                            <select class="input-persona" formControlName="coda">
+                                <option [ngValue]="null">Areas ...</option>
+                                @for (a of listaAreas; track a.coda) {
+                                <option [ngValue]="a.coda">{{ a.nombre }}</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-7 d-flex align-items-center">
+                            <label class="label-persona me-2 mb-0">Editorial:</label>
+                            <select class="input-persona" formControlName="code">
+                                <option [ngValue]="null">Editoriales ...</option>
+                                @for (e of listaEditoriales; track e.code) {
+                                <option [ngValue]="e.code">{{ e.nombre }}</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-5 d-flex align-items-start">
+                            <label class="label-persona me-2 mb-0 mt-1" style="width: 70px;">Tipo:</label>
+                            <div class="d-flex flex-column" style="font-size: 13px;">
+                                @for (t of listaTipos; track t.codtipo) {
+                                <div class="form-check mb-1">
+                                    <input class="form-check-input" type="checkbox" [id]="'tipoAdd' + t.codtipo"
+                                        [checked]="tieneTipo(tiposAgregar, t.codtipo)"
+                                        (change)="toggleTipo(tiposAgregar, t.codtipo, $any($event.target).checked)">
+                                    <label class="form-check-label" [for]="'tipoAdd' + t.codtipo">{{ t.nombre }}</label>
+                                </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-12 d-flex align-items-start">
+                            <label class="label-persona me-2 mb-0 mt-1">Resumen:</label>
+                            <textarea class="input-persona" formControlName="resumen" rows="3"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12 d-flex align-items-center">
+                            <label class="label-persona me-2 mb-0"></label>
+                            <div class="autores-box w-100">
+                                <div class="autores-header">Autores</div>
+                                <div class="autores-body">
+                                    <select class="input-persona" style="width: 200px;" [(ngModel)]="autorSeleccionado"
+                                        [ngModelOptions]="{standalone: true}">
+                                        <option [ngValue]="null">Autores ...</option>
+                                        @for (a of listaAutores; track a.coda) {
+                                        <option [ngValue]="a.coda">{{ a.nombre }} {{ a.ap }} {{ a.am }}</option>
+                                        }
+                                    </select>
+                                    <button type="button" class="btn-add-autor" title="Agregar Autor"
+                                        (click)="agregarAutor(autoresAgregar)">+</button>
+                                    <div class="autores-list">
+                                        @for (a of autoresAgregar; track a.coda) {
+                                        <span class="badge bg-secondary me-1">
+                                            {{ a.nombre }} {{ a.ap }}
+                                            <a href="javascript:void(0)" class="text-white ms-1"
+                                                (click)="quitarAutor(autoresAgregar, a.coda)">×</a>
+                                        </span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer modal-persona-footer">
+                    <button type="submit" class="btn btn-primary px-4">Guardar</button>
+                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" #verModal id="verTextoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div #fichaTexto>
+                    <h3>Ficha de Texto</h3>
+                    <table>
+                        <tr><td><strong>Título:</strong></td><td>{{ textoVer?.titulo }}</td></tr>
+                        <tr><td><strong>ISBN:</strong></td><td>{{ textoVer?.isbn || '-' }}</td></tr>
+                        <tr><td><strong>Edición:</strong></td><td>{{ textoVer?.edicion || '-' }}</td></tr>
+                        <tr><td><strong>Fecha pub.:</strong></td><td>{{ textoVer?.fechapub || '-' }}</td></tr>
+                        <tr><td><strong>Área:</strong></td><td>{{ textoVer?.area?.nombre }}</td></tr>
+                        <tr><td><strong>Editorial:</strong></td><td>{{ textoVer?.editorial?.nombre }}</td></tr>
+                        <tr>
+                            <td><strong>Tipos:</strong></td>
+                            <td>
+                                @for (t of textoVer?.tipos ?? []; track t.codtipo; let l = $last) {
+                                <span>{{ t.nombre }}@if (!l) {, }</span>
+                                }
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Autores:</strong></td>
+                            <td>
+                                @for (a of textoVer?.autores ?? []; track a.coda; let l = $last) {
+                                <span>{{ a.nombre }} {{ a.ap }} {{ a.am }}@if (!l) {, }</span>
+                                }
+                            </td>
+                        </tr>
+                        <tr><td><strong>Resumen:</strong></td><td>{{ textoVer?.resumen || '-' }}</td></tr>
+                        <tr><td><strong>Estado:</strong></td><td>{{ textoVer?.estado === 1 ? 'Activo' : 'De baja' }}</td></tr>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-center gap-2">
+                <button type="button" class="btn btn-primary btn-sm px-3" (click)="imprimirFicha()">Imprimir</button>
+                <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL MODIFICAR -->
+<div class="modal fade" #modModal id="modificarTextoModal" tabindex="-1" aria-labelledby="modificarTextoModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content modal-persona-content">
+            <div class="modal-header modal-persona-header">
+                <h5 class="modal-title" id="modificarTextoModalLabel">Modificar Texto</h5>
+            </div>
+            <form [formGroup]="regFormModificar" (ngSubmit)="guardarModificacion()">
+                <div class="modal-persona-body">
+
+                    <div class="row mb-3">
+                        <div class="col-md-7 d-flex align-items-center">
+                            <label class="label-persona me-2 mb-0">Titulo:</label>
+                            <input class="input-persona" type="text" formControlName="titulo" maxlength="200">
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-7 d-flex align-items-center">
+                            <label class="label-persona me-2 mb-0">ISBN:</label>
+                            <input class="input-persona" type="text" formControlName="isbn">
+                        </div>
+                        <div class="col-md-5 d-flex align-items-center">
+                            <label class="label-persona me-2 mb-0" style="width: 70px;">Edición:</label>
+                            <input class="input-persona" type="number" formControlName="edicion">
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-7 d-flex align-items-center">
+                            <label class="label-persona me-2 mb-0">Fecha Pub.:</label>
+                            <input class="input-persona" type="date" formControlName="fechapub">
+                        </div>
+                        <div class="col-md-5 d-flex align-items-center">
+                            <label class="label-persona me-2 mb-0" style="width: 70px;">Área:</label>
+                            <select class="input-persona" formControlName="coda">
+                                @for (a of listaAreas; track a.coda) {
+                                <option [ngValue]="a.coda">{{ a.nombre }}</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-7 d-flex align-items-center">
+                            <label class="label-persona me-2 mb-0">Editorial:</label>
+                            <select class="input-persona" formControlName="code">
+                                @for (e of listaEditoriales; track e.code) {
+                                <option [ngValue]="e.code">{{ e.nombre }}</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-5 d-flex align-items-start">
+                            <label class="label-persona me-2 mb-0 mt-1" style="width: 70px;">Tipo:</label>
+                            <div class="d-flex flex-column" style="font-size: 13px;">
+                                @for (t of listaTipos; track t.codtipo) {
+                                <div class="form-check mb-1">
+                                    <input class="form-check-input" type="checkbox" [id]="'tipoMod' + t.codtipo"
+                                        [checked]="tieneTipo(tiposModificar, t.codtipo)"
+                                        (change)="toggleTipo(tiposModificar, t.codtipo, $any($event.target).checked)">
+                                    <label class="form-check-label" [for]="'tipoMod' + t.codtipo">{{ t.nombre }}</label>
+                                </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-12 d-flex align-items-start">
+                            <label class="label-persona me-2 mb-0 mt-1">Resumen:</label>
+                            <textarea class="input-persona" formControlName="resumen" rows="3"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12 d-flex align-items-center">
+                            <label class="label-persona me-2 mb-0"></label>
+                            <div class="autores-box w-100">
+                                <div class="autores-header">Autores</div>
+                                <div class="autores-body">
+                                    <select class="input-persona" style="width: 200px;" [(ngModel)]="autorSeleccionado"
+                                        [ngModelOptions]="{standalone: true}">
+                                        <option [ngValue]="null">Autores ...</option>
+                                        @for (a of listaAutores; track a.coda) {
+                                        <option [ngValue]="a.coda">{{ a.nombre }} {{ a.ap }} {{ a.am }}</option>
+                                        }
+                                    </select>
+                                    <button type="button" class="btn-add-autor" title="Agregar Autor"
+                                        (click)="agregarAutor(autoresModificar)">+</button>
+                                    <div class="autores-list">
+                                        @for (a of autoresModificar; track a.coda) {
+                                        <span class="badge bg-secondary me-1">
+                                            {{ a.nombre }} {{ a.ap }}
+                                            <a href="javascript:void(0)" class="text-white ms-1"
+                                                (click)="quitarAutor(autoresModificar, a.coda)">×</a>
+                                        </span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer modal-persona-footer">
+                    <button type="submit" class="btn btn-primary px-4">Modificar</button>
+                    <button type="button" class="btn btn-secondary px-4"
+                        (click)="cerrarModal(modModal)">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL CONFIRMACIÓN -->
+<div class="modal fade" #confModal id="confirmarTextoModal" tabindex="-1" aria-labelledby="confirmarTextoModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header py-2"></div>
+            <div class="modal-body text-center">
+                @switch (accionPendiente) {
+                @case ('agregar') {
+                <p>¿Seguro de <strong>agregar</strong> el texto
+                    <strong>{{ regFormAgregar.get('titulo')?.value }}</strong>?
+                </p>
+                }
+                @case ('modificar') {
+                <p>¿Seguro de <strong>modificar</strong> el texto
+                    <strong>{{ regFormModificar.get('titulo')?.value }}</strong>?
+                </p>
+                }
+                @case ('baja') {
+                <p>¿Seguro de <strong>dar de baja</strong> el texto
+                    <strong>{{ textoPendiente?.titulo }}</strong>?
+                </p>
+                }
+                @case ('habilitar') {
+                <p>¿Seguro de <strong>habilitar</strong> el texto
+                    <strong>{{ textoPendiente?.titulo }}</strong>?
+                </p>
+                }
+                }
+            </div>
+            <div class="modal-footer justify-content-center gap-2 py-2">
+                <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal"
+                    (click)="cancelarAccion()">Cancelar</button>
+                <button type="button" class="btn btn-primary btn-sm px-3" data-bs-dismiss="modal"
+                    (click)="confirmarAccion()">Aceptar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div class="mi-toast" [class.visible]="toastVisible" [class.error]="toastTipo === 'error'">
+    <span class="mi-toast-icon">{{ toastTipo === 'error' ? '✕' : '✓' }}</span>
+    <span class="mi-toast-msg">{{ toastMensaje }}</span>
+</div>

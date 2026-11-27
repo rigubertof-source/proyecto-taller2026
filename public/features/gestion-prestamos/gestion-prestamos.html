@@ -1,0 +1,269 @@
+<div class="caja">
+    <h4>Gestión de Préstamos</h4>
+
+    <form class="bar d-flex align-items-center flex-nowrap gap-4" (submit)="$event.preventDefault()">
+        <div class="d-flex align-items-center">
+            <label class="me-2 mb-0 text-nowrap">Fecha Inicio:</label>
+            <input type="date" class="form-control form-control-sm" style="width: 150px" [formControl]="fechaIniControl"
+                (input)="paginaP = 1">
+        </div>
+        <div class="d-flex align-items-center">
+            <label class="me-2 mb-0 text-nowrap">Fecha Fin:</label>
+            <input type="date" class="form-control form-control-sm" style="width: 150px" [formControl]="fechaFinControl"
+                (input)="paginaP = 1">
+        </div>
+        <div class="d-flex align-items-center">
+            <label class="me-2 mb-0 text-nowrap">Estudiante:</label>
+            <input type="text" class="form-control form-control-sm" style="width: 180px" placeholder="Nombre o apellido"
+                [formControl]="buscarControl" (input)="paginaP = 1">
+        </div>
+        <div class="d-flex align-items-center gap-3 ms-2">
+            <div class="form-check mb-0 d-flex align-items-center gap-1">
+                <input type="radio" class="form-check-input mt-0" name="estadoP" id="pActivos"
+                    [checked]="estadoFiltro === 'activos'" (change)="cambiarEstadoFiltro('activos')">
+                <label class="form-check-label" for="pActivos">Activos</label>
+            </div>
+            <div class="form-check mb-0 d-flex align-items-center gap-1">
+                <input type="radio" class="form-check-input mt-0" name="estadoP" id="pBajas"
+                    [checked]="estadoFiltro === 'bajas'" (change)="cambiarEstadoFiltro('bajas')">
+                <label class="form-check-label" for="pBajas">Bajas</label>
+            </div>
+            <div class="form-check mb-0 d-flex align-items-center gap-1">
+                <input type="radio" class="form-check-input mt-0" name="estadoP" id="pTodos"
+                    [checked]="estadoFiltro === 'todos'" (change)="cambiarEstadoFiltro('todos')">
+                <label class="form-check-label" for="pTodos">Todos</label>
+            </div>
+        </div>
+        <button type="button" class="btn-icono ms-auto" title="Nuevo Préstamo" (click)="abrirNuevo()">
+            <img src="add1.png" alt="Nuevo Préstamo" style="width: 32px;">
+        </button>
+    </form>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th style="width: 40px;">#</th>
+                <th>CodPres.</th>
+                <th>Fecha</th>
+                <th>Estudiante</th>
+                <th>F. Inicio</th>
+                <th>F. Fin</th>
+                <th>Tipo Pres.</th>
+                <th class="text-center">Estado</th>
+                <th class="text-center">B</th>
+                <th class="text-center">V</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (p of prestamosPaginados; track p.codp) {
+            <tr [class.fila-seleccionada]="prestamoSeleccionado?.codp === p.codp">
+                <td class="text-center">
+                    <input class="form-check-input" type="radio" name="prestamoRadio"
+                        [checked]="prestamoSeleccionado?.codp === p.codp" (change)="seleccionarPrestamo(p)">
+                </td>
+                <td>{{ p.codp }}</td>
+                <td>{{ p.fecha | date:'dd/MM/yyyy' }}</td>
+                <td>{{ nombreCompleto(p) }}</td>
+                <td>{{ p.fini | date:'dd/MM/yyyy' }}</td>
+                <td>{{ p.ffin | date:'dd/MM/yyyy' }}</td>
+                <td>{{ p.tipopres === 1 ? 'En Sala' : 'Domicilio' }}</td>
+                <td class="text-center">
+                    <span class="icono-estado" [title]="p.estado === 1 ? 'Activo' : 'Baja'">
+                        <img class="f15" [src]="p.estado === 1 ? 'si.png' : 'no.png'"
+                            [alt]="p.estado === 1 ? 'Activo' : 'Baja'">
+                    </span>
+                </td>
+                <td class="text-center">
+                    <img class="fo13" src="eliminar.png" title="Eliminar préstamo"
+                        (click)="pedirConfirmacion('eliminar', p)">
+                </td>
+                <td class="text-center">
+                    <img class="fo14" src="impri.png" title="Comprobante" (click)="imprimirComprobante(p)">
+                </td>
+            </tr>
+            } @empty {
+            <tr>
+                <td colspan="10" class="text-center">No se encontraron préstamos.</td>
+            </tr>
+            }
+        </tbody>
+    </table>
+
+    <nav aria-label="Paginación de préstamos">
+        <ul class="pagination justify-content-center">
+            <li class="page-item" [class.disabled]="paginaP === 1">
+                <a class="page-link" href="javascript:void(0)" (click)="irPaginaP(paginaP - 1)"> &lt;&lt; </a>
+            </li>
+            @for (p of paginasP; track p) {
+            <li class="page-item" [class.active]="p === paginaP">
+                <a class="page-link" href="javascript:void(0)" (click)="irPaginaP(p)">{{ p }}</a>
+            </li>
+            }
+            <li class="page-item" [class.disabled]="paginaP === totalPaginasP">
+                <a class="page-link" href="javascript:void(0)" (click)="irPaginaP(paginaP + 1)"> &gt;&gt; </a>
+            </li>
+        </ul>
+    </nav>
+
+    <h6 class="detalle-titulo">.:: D E T A L L E &nbsp; D E &nbsp; P R É S T A M O ::.</h6>
+    @if (prestamoSeleccionado) {
+    <p class="text-center text-muted mb-2">Préstamo Nº {{ prestamoSeleccionado.codp }} — {{
+        nombreCompleto(prestamoSeleccionado) }}</p>
+    }
+    <table class="table tabla-detalle">
+        <thead>
+            <tr>
+                <th>Cod.Inv.</th>
+                <th>Título Ejemplar</th>
+                <th class="text-center">Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (d of listaDetalle; track d.codinv) {
+            <tr>
+                <td>{{ d.codinv }}</td>
+                <td>{{ d.titulo }}</td>
+                <td class="text-center">
+                    {{ d.estado === 1 ? 'Prestado' : 'Devuelto' }}
+                </td>
+            </tr>
+            } @empty {
+            <tr>
+                <td colspan="3" class="text-center">
+                    {{ prestamoSeleccionado ? 'Sin ejemplares.' : 'Seleccione un préstamo.' }}
+                </td>
+            </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div class="modal fade" #addModal tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modal-persona-content">
+            <div class="modal-header modal-persona-header">
+                <h5 class="modal-title">Nuevo Préstamo ..</h5>
+            </div>
+            <form [formGroup]="form" (submit)="$event.preventDefault(); guardarNuevo()">
+                <div class="modal-persona-body">
+                    <div class="row-persona">
+                        <label class="label-persona">Fecha:</label>
+                        <input class="input-persona" type="date" formControlName="fecha">
+                    </div>
+                    <div class="row-persona">
+                        <label class="label-persona">Fecha Inicio:</label>
+                        <input class="input-persona" type="date" formControlName="fini">
+                    </div>
+                    <div class="row-persona">
+                        <label class="label-persona">Fecha Fin:</label>
+                        <input class="input-persona" type="date" formControlName="ffin">
+                    </div>
+                    <div class="row-persona">
+                        <label class="label-persona">Tipo Préstamo:</label>
+                        <div class="d-flex gap-3">
+                            <label class="d-flex align-items-center gap-1">
+                                <input type="radio" class="form-check-input mt-0" [value]="1"
+                                    formControlName="tipopres"> En Sala
+                            </label>
+                            <label class="d-flex align-items-center gap-1">
+                                <input type="radio" class="form-check-input mt-0" [value]="2"
+                                    formControlName="tipopres"> Domicilio
+                            </label>
+                        </div>
+                    </div>
+                    <div class="row-persona">
+                        <label class="label-persona">Estudiante:</label>
+                        <select class="input-persona" formControlName="ci">
+                            <option [ngValue]="null">Seleccionar Estudiante</option>
+                            @for (e of listaEstudiantes; track e.ci) {
+                            <option [ngValue]="e.ci">{{ nombreCompleto(e) }}</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="fw-semibold small mt-2">DETALLE EJEMPLARES:</div>
+                    <div class="detalle-ej-box">
+                        <table class="table table-sm mb-0 tabla-modal-ej">
+                            <thead>
+                                <tr>
+                                    <th class="text-center" style="width: 40px;">#</th>
+                                    <th style="width: 70px;">Cod.Inv.</th>
+                                    <th>Título Ejemplar</th>
+                                    <th class="text-center" style="width: 40px;">B</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (fila of filas.controls; track fila; let i = $index) {
+                                <tr>
+                                    <td class="text-center">
+                                        @if (i === filas.length - 1) {
+                                        <button type="button" class="btn-icono" title="Agregar ejemplar"
+                                            (click)="agregarFila()">
+                                            <img src="add1.png" alt="+" style="width: 22px;">
+                                        </button>
+                                        }
+                                    </td>
+                                    <td>{{ codinvFila(i) ?? '' }}</td>
+                                    <td>
+                                        <select class="form-select form-select-sm" [formControl]="fila">
+                                            <option [ngValue]="null">Seleccionar ejemplar...</option>
+                                            @for (e of opcionesFila(i); track e.codinv) {
+                                            <option [ngValue]="e.codinv">{{ e.titulo }}</option>
+                                            }
+                                        </select>
+                                    </td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn-icono" title="Quitar" (click)="quitarFila(i)">
+                                            <img src="eliminar.png" alt="Quitar" style="width: 20px;">
+                                        </button>
+                                    </td>
+                                </tr>
+                                } @empty {
+                                <tr>
+                                    <td class="text-center">
+                                        <button type="button" class="btn-icono" (click)="agregarFila()">
+                                            <img src="add1.png" alt="+" style="width: 22px;">
+                                        </button>
+                                    </td>
+                                    <td colspan="3" class="text-muted">Agregue un ejemplar.</td>
+                                </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer modal-persona-footer">
+                    <button type="submit" class="btn btn-primary px-4">Guardar</button>
+                    <button type="button" class="btn btn-secondary px-4"
+                        (click)="cerrarModal(addModal)">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" #confModal tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header py-2"></div>
+            <div class="modal-body text-center">
+                @switch (accionPendiente) {
+                @case ('agregar') { <p>¿Seguro de <strong>registrar</strong> el nuevo préstamo?</p> }
+                @case ('eliminar') { <p>¿Seguro de <strong>eliminar</strong> el préstamo <strong>{{
+                        prestamoPendiente?.codp }}</strong>? Esta acción no se puede deshacer.</p> }
+                }
+            </div>
+            <div class="modal-footer justify-content-center gap-2 py-2">
+                <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal"
+                    (click)="cancelarAccion()">Cancelar</button>
+                <button type="button" class="btn btn-primary btn-sm px-3" (click)="confirmarAccion()">Aceptar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div class="mi-toast" [class.visible]="toastVisible" [class.error]="toastTipo === 'error'">
+    <span class="mi-toast-icon">{{ toastTipo === 'error' ? '✕' : '✓' }}</span>
+    <span class="mi-toast-msg">{{ toastMensaje }}</span>
+</div>
